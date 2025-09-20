@@ -34,8 +34,8 @@
   .layer {
     display: grid;
     grid-area: 1 / 1 / -1 / -1;
-    grid-template-rows: subgrid;
-    grid-template-columns: subgrid;
+    grid-template-rows: repeat(8, 1fr);
+    grid-template-columns: repeat(8, 1fr);
     gap: 4px;
   }
 </style>

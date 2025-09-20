@@ -27,6 +27,10 @@ export const game = $state<GameState>({
   showEndGameConfirmation: false
 })
 
+// Store the original tile bag and swap pool
+let originalTileBag: string[] = []
+let swapPool: string[] = []
+
 // Initialize game
 export function initializeGame() {
   // Load word list
@@ -51,6 +55,9 @@ function generateLayers(): Layer[] {
 
   const tileMap = new Map<string, string>()
   const remainingTiles = [...TILE_BAG]
+  
+  // Store the original tile bag for reference
+  originalTileBag = [...TILE_BAG]
 
   // Generate tiles for each layer
   layers.forEach((layer, z) => {
@@ -95,6 +102,18 @@ function generateLayers(): Layer[] {
     }
   })
 
+  // Create swap pool from remaining tiles (tiles not used in the puzzle)
+  swapPool = [...remainingTiles]
+  
+  // If we don't have enough tiles in the swap pool, add some from the original bag
+  // This ensures we always have tiles available for swapping
+  if (swapPool.length < 20) {
+    const additionalTiles = originalTileBag.slice(0, 20 - swapPool.length)
+    swapPool.push(...additionalTiles)
+  }
+
+  console.log('Swap pool created with', swapPool.length, 'tiles:', swapPool.slice(0, 10), '...')
+  
   return layers
 }
 
@@ -185,8 +204,8 @@ export function updateTileStates() {
     })
   })
   
-  // Trigger reactivity
-  game.layers = [...game.layers]
+  // No need to recreate the array - we only modified tile properties
+  // Svelte's reactivity will handle the updates automatically
 }
 
 // Select/deselect a tile
@@ -244,8 +263,8 @@ function updateTempSelectableStates() {
     }
   }
   
-  // Trigger reactivity
-  game.layers = [...game.layers]
+  // No need to recreate the array - we only modified tile properties
+  // Svelte's reactivity will handle the updates automatically
 }
 
 // Validate that all covering tiles are used when temp-selectable tiles are used
@@ -346,8 +365,8 @@ export function clearSelection() {
   game.selectedTiles = []
   game.currentWord = ''
   
-  // Trigger reactivity
-  game.layers = [...game.layers]
+  // No need to recreate the array - we only modified tile properties
+  // Svelte's reactivity will handle the updates automatically
 }
 
 // Backspace - remove last selected tile
@@ -437,8 +456,8 @@ export function reorderTiles(fromIndex: number, toIndex: number) {
   // Update current word to match new order
   game.currentWord = game.selectedTiles.map(tile => tile.letter).join('')
   
-  // Trigger reactivity
-  game.layers = [...game.layers]
+  // No need to recreate the array - we only modified selectedTiles
+  // Svelte's reactivity will handle the updates automatically
 }
 
 // Remove a specific tile from the current word
@@ -486,8 +505,16 @@ export function toggleSwapMode() {
 export function swapTile(tile: Tile) {
   if (!game.swapMode || game.swapsRemaining <= 0) return
   
-  // Generate a new random letter
-  const newLetter = TILE_BAG[Math.floor(Math.random() * TILE_BAG.length)]
+  // Check if we have tiles available in the swap pool
+  if (swapPool.length === 0) {
+    game.feedback = "No more tiles available for swapping!"
+    game.feedbackColor = 'red'
+    return
+  }
+  
+  // Get a random tile from the swap pool
+  const randomIndex = Math.floor(Math.random() * swapPool.length)
+  const newLetter = swapPool.splice(randomIndex, 1)[0]
   
   // Update the tile's letter
   tile.letter = newLetter
@@ -499,11 +526,11 @@ export function swapTile(tile: Tile) {
   game.swapMode = false
   
   // Update feedback
-  game.feedback = `Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining`
+  game.feedback = `Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${swapPool.length} tiles left)`
   game.feedbackColor = 'green'
   
-  // Trigger reactivity
-  game.layers = [...game.layers]
+  // No need to trigger full re-render since we only changed one tile's letter
+  // The tile component will automatically update due to the letter change
 }
 
 // Show end game confirmation dialog
@@ -554,4 +581,13 @@ export function getTileState(tile: Tile): 'available' | 'selected' | 'visible-un
   if (isTileTempSelectable(tile)) return 'temp-selectable'
   if (!tile.selectable) return 'visible-unselectable'
   return 'available'
+}
+
+// Get swap pool status for debugging
+export function getSwapPoolStatus() {
+  return {
+    remainingTiles: swapPool.length,
+    tiles: swapPool.slice(0, 10), // Show first 10 tiles
+    totalOriginal: originalTileBag.length
+  }
 }
