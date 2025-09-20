@@ -505,16 +505,28 @@ export function toggleSwapMode() {
 export function swapTile(tile: Tile) {
   if (!game.swapMode || game.swapsRemaining <= 0) return
   
+  // Use daily swap pool if available (for daily puzzle mode)
+  const currentSwapPool = (window as any).dailySwapPool || swapPool
+  const dailyRng = (window as any).dailyRng // Seeded random for daily puzzle
+  
   // Check if we have tiles available in the swap pool
-  if (swapPool.length === 0) {
+  if (currentSwapPool.length === 0) {
     game.feedback = "No more tiles available for swapping!"
     game.feedbackColor = 'red'
     return
   }
   
-  // Get a random tile from the swap pool
-  const randomIndex = Math.floor(Math.random() * swapPool.length)
-  const newLetter = swapPool.splice(randomIndex, 1)[0]
+  // Get a tile from the swap pool using seeded random for daily puzzle, or regular random for free play
+  let randomIndex: number
+  if (dailyRng) {
+    // Use seeded random for deterministic daily puzzle swaps
+    randomIndex = Math.floor(dailyRng.next() * currentSwapPool.length)
+  } else {
+    // Use regular random for free play
+    randomIndex = Math.floor(Math.random() * currentSwapPool.length)
+  }
+  
+  const newLetter = currentSwapPool.splice(randomIndex, 1)[0]
   
   // Update the tile's letter
   tile.letter = newLetter
@@ -526,7 +538,7 @@ export function swapTile(tile: Tile) {
   game.swapMode = false
   
   // Update feedback
-  game.feedback = `Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${swapPool.length} tiles left)`
+  game.feedback = `Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${currentSwapPool.length} tiles left)`
   game.feedbackColor = 'green'
   
   // No need to trigger full re-render since we only changed one tile's letter

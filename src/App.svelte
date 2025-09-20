@@ -4,35 +4,78 @@
   import Board from './components/Board.svelte'
   import WordArea from './components/WordArea.svelte'
   import Score from './components/Score.svelte'
+  import DailyPuzzle from './components/DailyPuzzle.svelte'
   const logo = './logo.svg'
+
+  // Navigation state
+  let currentPage = $state<'main' | 'daily'>('main')
 
   onMount(() => {
     initializeGame()
   })
+
+  function goToMainGame() {
+    currentPage = 'main'
+    // Reset game state and generate new puzzle for free play
+    initializeGame()
+  }
+
+  function goToDailyPuzzle() {
+    currentPage = 'daily'
+  }
 </script>
 
 <main>
   <img src={logo} alt="Stacks Logo" />
-  <Board />
-  <WordArea />
-  <Score />
   
-  <div class="bottom-controls">
+  <!-- Navigation -->
+  <nav class="page-nav">
     <button 
-      on:click={showEndGameConfirmation} 
-      disabled={game.gameOver}
-      class="done-button"
+      class="nav-button" 
+      class:active={currentPage === 'main'}
+      onclick={goToMainGame}
     >
-      End Game
+      Free Play
     </button>
-  </div>
+    <button 
+      class="nav-button" 
+      class:active={currentPage === 'daily'}
+      onclick={goToDailyPuzzle}
+    >
+      Daily Puzzle
+    </button>
+  </nav>
+
+  <!-- Main Game Page -->
+  {#if currentPage === 'main'}
+    <div class="game-page">
+      <Board />
+      <WordArea />
+      <Score />
+      
+      <div class="bottom-controls">
+        <button 
+          onclick={showEndGameConfirmation} 
+          disabled={game.gameOver}
+          class="done-button"
+        >
+          End Game
+        </button>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Daily Puzzle Page -->
+  {#if currentPage === 'daily'}
+    <DailyPuzzle />
+  {/if}
 
   <!-- Confirmation Dialog -->
   {#if game.showEndGameConfirmation}
     <div 
       class="confirmation-overlay" 
-      on:click={cancelEndGame}
-      on:keydown={(e) => e.key === 'Escape' && cancelEndGame()}
+      onclick={cancelEndGame}
+      onkeydown={(e) => e.key === 'Escape' && cancelEndGame()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="dialog-title"
@@ -40,8 +83,8 @@
     >
       <div 
         class="confirmation-dialog" 
-        on:click|stopPropagation
-        on:keydown={(e) => e.key === 'Escape' && cancelEndGame()}
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => e.key === 'Escape' && cancelEndGame()}
         role="alertdialog"
         tabindex="0"
       >
@@ -49,10 +92,10 @@
         <p>Are you sure you want to end the game? You'll receive a penalty for any remaining letters.</p>
         
         <div class="confirmation-buttons">
-          <button on:click={cancelEndGame} class="cancel-button">
+          <button onclick={cancelEndGame} class="cancel-button">
             Cancel
           </button>
-          <button on:click={confirmEndGame} class="confirm-button">
+          <button onclick={confirmEndGame} class="confirm-button">
             End Game
           </button>
         </div>
@@ -76,27 +119,65 @@
     height: 60px;
   }
 
+  .page-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .nav-button {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+  }
+
+  .nav-button:hover:not(:disabled) {
+    background-color: #f0f0f0;
+  }
+
+  .nav-button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+  }
+
+  .nav-button.active:hover {
+    background-color: #0056b3;
+  }
+
+  .game-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+  }
+
+
   .bottom-controls {
     margin-top: auto;
     padding: 20px 0;
   }
 
   .done-button {
-    padding: 12px 24px;
-    border: 2px solid #c82333;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
     background-color: #dc3545;
     color: white;
     cursor: pointer;
     font-family: inherit;
-    font-size: 16px;
-    font-weight: bold;
-    transition: all 0.2s ease;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
   }
 
   .done-button:hover:not(:disabled) {
     background-color: #c82333;
-    border-color: #a71e2a;
   }
 
   .done-button:disabled {
