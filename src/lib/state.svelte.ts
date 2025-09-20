@@ -30,7 +30,7 @@ export const game = $state<GameState>({
 // Initialize game
 export function initializeGame() {
   // Load word list
-  fetch('/wordlist.txt')
+  fetch('./wordlist.txt')
     .then(response => response.text())
     .then(data => {
       game.wordList = new Set(data.split('\n').map(word => word.trim().toUpperCase()))

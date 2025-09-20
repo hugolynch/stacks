@@ -4,7 +4,7 @@
   import Board from './components/Board.svelte'
   import WordArea from './components/WordArea.svelte'
   import Score from './components/Score.svelte'
-  const logo = '/logo.svg'
+  const logo = './logo.svg'
 
   onMount(() => {
     initializeGame()
