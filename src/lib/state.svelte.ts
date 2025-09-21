@@ -1,11 +1,5 @@
 import type { GameState, Tile, Layer, Coordinate } from '../types/game'
 
-// Scrabble-style letter values
-const LETTER_VALUES: Record<string, number> = {
-  A: 1, B: 3, C: 3, D: 2, E: 1, F: 4, G: 2, H: 4, I: 1, J: 8,
-  K: 5, L: 1, M: 3, N: 1, O: 1, P: 3, Q: 10, R: 1, S: 1, T: 1,
-  U: 1, V: 4, W: 4, X: 8, Y: 4, Z: 10, "*": 0
-}
 
 // Generate tile bag with Scrabble distribution
 const TILE_BAG = "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ**".split('')
@@ -418,25 +412,31 @@ function generateWildcardPermutations(word: string): string[] {
   return permutations
 }
 
-// Calculate word score using Fibonacci-based scoring
+// Calculate word score using custom scoring values
 function calculateWordScore(word: string): number {
   const length = word.length
   
-  // Fibonacci sequence: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144...
-  // For word lengths: 2->2, 3->3, 4->5, 5->8, 6->13, 7->21, 8->34, etc.
-  if (length <= 1) return 0
-  if (length === 2) return 2
-  if (length === 3) return 3
-  
-  // Calculate Fibonacci number for word length
-  let a = 2, b = 3
-  for (let i = 4; i <= length; i++) {
-    const temp = a + b
-    a = b
-    b = temp
+  // Custom scoring values based on word length
+  const scores = {
+    1: 0,
+    2: 1,
+    3: 3,
+    4: 5,
+    5: 8,
+    6: 12,
+    7: 17,
+    8: 23,
+    9: 30,
+    10: 38,
+    11: 47,
+    12: 57,
+    13: 68,
+    14: 80,
+    15: 93,
+    16: 107
   }
   
-  return b
+  return scores[length] || 0
 }
 
 // Reorder tiles in the current word

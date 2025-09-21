@@ -30,14 +30,16 @@ Tiles become selectable only when ALL 4 parent tiles covering them are removed.
 
 ## Scoring
 
-Uses Scrabble-style letter values:
-- A, E, I, O, U, L, N, S, T, R = 1 point
-- D, G = 2 points
-- B, C, M, P = 3 points
-- F, H, V, W, Y = 4 points
-- K = 5 points
-- J, X = 8 points
-- Q, Z = 10 points
+Uses word length-based scoring:
+- 1 letter = 0 points
+- 2 letters = 1 point
+- 3 letters = 3 points
+- 4 letters = 5 points
+- 5 letters = 8 points
+- 6 letters = 12 points
+- 7 letters = 17 points
+- 8 letters = 23 points
+- 9+ letters = Higher scores (see game for full table)
 - * (wildcard) = 0 points
 
 ## Development

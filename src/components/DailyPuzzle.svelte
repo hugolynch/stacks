@@ -226,7 +226,7 @@ Attempts: ${dailyData.attempts}`
               {/each}
               {#if game.penaltyScore > 0}
                 <span class="penalty-pill">
-                  {game.layers.flatMap(layer => layer.tiles).map(tile => tile.letter).join(', ')} (-{game.penaltyScore})
+                  UNUSED TILES (-{game.penaltyScore})
                 </span>
               {/if}
             </div>
@@ -407,7 +407,8 @@ Attempts: ${dailyData.attempts}`
     flex-direction: column;
     gap: 16px;
     padding: 16px;
-    border: 1px solid #ccc;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
   }
 
   .words-found {
@@ -440,7 +441,6 @@ Attempts: ${dailyData.attempts}`
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 0.9em;
-    font-weight: bold;
   }
 
   .final-score {
