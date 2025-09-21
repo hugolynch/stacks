@@ -117,8 +117,14 @@
 
   // Update best score when words are submitted
   function updateBestScore() {
-    updateTodayBestScore(game.totalScore)
-    dailyData.bestScore = Math.max(dailyData.bestScore, game.totalScore)
+    // Calculate current penalty based on remaining tiles
+    const remainingTiles = game.layers.flatMap(layer => layer.tiles)
+    const currentPenalty = remainingTiles.length * 3
+    
+    // Calculate current final score (words score - penalty for unused tiles)
+    const currentFinalScore = game.totalScore - currentPenalty
+    updateTodayBestScore(currentFinalScore)
+    dailyData.bestScore = Math.max(dailyData.bestScore, currentFinalScore)
   }
 
   // Handle daily puzzle end game

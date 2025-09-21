@@ -3,7 +3,7 @@
 </script>
 
 <div class="score-container">
-  <h3>Score: {game.totalScore}</h3>
+  <h3>Score: {game.totalScore - (game.layers.flatMap(layer => layer.tiles).length * 3)}</h3>
   
   {#if game.usedWords.length > 0}
     <div class="word-list">
