@@ -42,6 +42,13 @@
     }
   })
 
+  // Update best score when total score changes
+  $effect(() => {
+    if (game.totalScore > 0) {
+      updateBestScore()
+    }
+  })
+
   function initializeDailyPuzzle() {
     // Get today's puzzle data
     dailyData = getDailyPuzzleData()
@@ -139,6 +146,9 @@
     // Clear the current game state
     resetDailyPuzzleForReplay()
     
+    // Reset completion status to hide banner
+    dailyData.isCompleted = false
+    
     // Reset game state to fresh puzzle
     game.currentWord = ''
     game.selectedTiles = []
@@ -172,13 +182,33 @@
       day: 'numeric' 
     })
   }
+
+  // Share daily puzzle stats
+  async function shareStats() {
+    const statsText =
+`Stacks Daily Puzzle
+${formatDate(dailyData.date)}
+    
+First Score: ${dailyData.firstScore}
+Best Score: ${dailyData.bestScore}
+Attempts: ${dailyData.attempts}`
+
+    try {
+      await navigator.clipboard.writeText(statsText)
+      game.feedback = 'Stats copied to clipboard!'
+      game.feedbackColor = 'green'
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err)
+      game.feedback = 'Failed to copy to clipboard'
+      game.feedbackColor = 'red'
+    }
+  }
 </script>
 
 <main class="daily-puzzle">
   <header class="daily-header">
     <div class="daily-info">
       <div class="date">{formatDate(dailyData.date)}</div>
-      <div class="seed-info">Seed: {dailyData.seed}</div>
     </div>
   </header>
 
@@ -186,7 +216,25 @@
   {#if dailyData.isCompleted}
     <div class="completion-banner success">
       <div class="completion-content">
-        <div class="completion-title">🎉 Daily puzzle completed!</div>
+        <div class="completion-title">Daily puzzle completed!</div>
+        <div class="score-breakdown">
+          <div class="words-found">
+            <div class="words-title">Words found:</div>
+            <div class="words-list">
+              {#each game.usedWords as wordData (wordData.word)}
+                <span class="word-pill">{wordData.word} ({wordData.score})</span>
+              {/each}
+              {#if game.penaltyScore > 0}
+                <span class="penalty-pill">
+                  {game.layers.flatMap(layer => layer.tiles).map(tile => tile.letter).join(', ')} (-{game.penaltyScore})
+                </span>
+              {/if}
+            </div>
+          </div>
+          <div class="final-score">
+            Final score: {game.finalScore}
+          </div>
+        </div>
         <div class="score-stats">
           <div class="score-item">
             <span class="score-label">First Score:</span>
@@ -201,9 +249,14 @@
             <span class="score-value">{dailyData.attempts}</span>
           </div>
         </div>
-        <button onclick={resetDailyPuzzle} class="reset-button">
-          Play Again
-        </button>
+        <div class="completion-actions">
+          <button onclick={shareStats} class="share-button">
+            Share
+          </button>
+          <button onclick={resetDailyPuzzle} class="reset-button">
+            Play Again
+          </button>
+        </div>
       </div>
     </div>
   {/if}
@@ -268,7 +321,6 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    padding: 20px;
     min-height: 100vh;
   }
 
@@ -287,7 +339,6 @@
   .date {
     font-size: 1.2em;
     font-weight: bold;
-    color: #333;
   }
 
   .seed-info {
@@ -301,8 +352,9 @@
     padding: 20px;
     border-radius: 8px;
     border: 1px solid #dee2e6;
-    margin: 20px 0;
     text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
   }
 
   .completion-banner.success {
@@ -322,7 +374,6 @@
     font-size: 1.1em;
     font-weight: 600;
     color: #333;
-    margin-bottom: 15px;
   }
 
   .score-stats {
@@ -330,7 +381,6 @@
     gap: 30px;
     flex-wrap: wrap;
     justify-content: center;
-    margin-bottom: 20px;
   }
 
   .score-item {
@@ -350,6 +400,75 @@
     font-size: 1.1em;
     font-weight: 600;
     color: #333;
+  }
+
+  .score-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid #ccc;
+  }
+
+  .words-found {
+    margin-bottom: 5px;
+  }
+
+  .words-title {
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: #333;
+  }
+
+  .words-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .word-pill {
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .penalty-pill {
+    background-color: #f8d7da;
+    color: #dc3545;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+  }
+
+  .final-score {
+    font-weight: bold;
+    color: #333;
+  }
+
+  .completion-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .share-button {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  .share-button:hover {
+    background-color: #f0f0f0;
   }
 
   .reset-button {
@@ -396,17 +515,6 @@
 
   .done-button:hover:not(:disabled) {
     background-color: #c82333;
-  }
-
-
-
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .daily-puzzle {
-      padding: 10px;
-    }
-
-
   }
 
   /* Confirmation Dialog Styles */
