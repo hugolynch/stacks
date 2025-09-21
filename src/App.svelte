@@ -117,6 +117,20 @@
 
   img {
     height: 60px;
+    max-width: 100%;
+    width: auto;
+  }
+
+  @media (max-width: 480px) {
+    img {
+      height: 50px;
+    }
+  }
+
+  @media (max-width: 320px) {
+    img {
+      height: 40px;
+    }
   }
 
   .page-nav {

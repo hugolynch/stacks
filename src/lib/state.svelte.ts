@@ -312,8 +312,13 @@ function validateTempSelectableTiles(): { valid: boolean; error: string } {
 
 // Submit current word
 export function submitWord() {
-  if (game.currentWord.length === 0) return
+  if (game.selectedTiles.length === 0) return
   if (game.gameOver) return
+
+  // Build word from current tile order (after any reordering)
+  const currentWord = game.selectedTiles.map(tile => tile.letter).join('')
+  
+  if (currentWord.length === 0) return
 
   // Validate temp-selectable tiles
   const tempSelectableValidation = validateTempSelectableTiles()
@@ -323,15 +328,15 @@ export function submitWord() {
     return
   }
 
-  const upperWord = game.currentWord.toUpperCase()
+  const upperWord = currentWord.toUpperCase()
   const possibleWords = generateWildcardPermutations(upperWord)
   const isValidWord = possibleWords.some(word => game.wordList.has(word))
 
   if (isValidWord) {
-    const wordScore = calculateWordScore(game.currentWord.toUpperCase())
+    const wordScore = calculateWordScore(currentWord.toUpperCase())
     game.totalScore += wordScore
-    game.usedWords.push({ word: game.currentWord.toUpperCase(), score: wordScore })
-    game.feedback = `"${game.currentWord}" is a valid word!`
+    game.usedWords.push({ word: currentWord.toUpperCase(), score: wordScore })
+    game.feedback = `"${currentWord}" is a valid word!`
     game.feedbackColor = 'green'
 
     // Remove selected tiles
@@ -349,7 +354,7 @@ export function submitWord() {
     // Update tile states after removal
     updateTileStates()
   } else {
-    game.feedback = `"${game.currentWord}" is not a valid word.`
+    game.feedback = `"${currentWord}" is not a valid word.`
     game.feedbackColor = 'red'
   }
 
@@ -479,8 +484,9 @@ export function removeTileFromWord(index: number) {
 
 // Get potential score for current word
 export function getCurrentWordScore(): number {
-  if (game.currentWord.length === 0) return 0
-  return calculateWordScore(game.currentWord.toUpperCase())
+  if (game.selectedTiles.length === 0) return 0
+  const currentWord = game.selectedTiles.map(tile => tile.letter).join('')
+  return calculateWordScore(currentWord.toUpperCase())
 }
 
 // Toggle swap mode

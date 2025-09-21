@@ -1,19 +1,8 @@
 <script lang="ts">
   import { game, submitWord, clearSelection, reorderTiles, removeTileFromWord, getCurrentWordScore, toggleSwapMode } from '../lib/state.svelte'
-  import { actions } from '../lib/actions'
+  import { dndzone } from 'svelte-dnd-action'
   import WordTile from './WordTile.svelte'
   import type { Tile } from '../types/game'
-
-  let draggedIndex: number | null = null
-  let dragOverIndex: number | null = null
-
-  // Handle global mouse up for drag end
-  function handleGlobalMouseUp() {
-    if (draggedIndex !== null) {
-      draggedIndex = null
-      dragOverIndex = null
-    }
-  }
 
   function handleKeydown(e: KeyboardEvent) {
     switch (e.key) {
@@ -28,41 +17,18 @@
     }
   }
 
-  function handleDragStart(e: CustomEvent) {
-    draggedIndex = e.detail.index
-    document.addEventListener('mouseup', handleGlobalMouseUp)
+  function handleDndConsider(e: CustomEvent) {
+    // Update the selected tiles order when drag is considered
+    game.selectedTiles = e.detail.items
+    // Update current word to reflect new order
+    game.currentWord = game.selectedTiles.map(tile => tile.letter).join('')
   }
 
-  function handleDragEnd(e: CustomEvent) {
-    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
-      reorderTiles(draggedIndex, dragOverIndex)
-    }
-    draggedIndex = null
-    dragOverIndex = null
-    document.removeEventListener('mouseup', handleGlobalMouseUp)
-  }
-
-  function handleDragOver(e: CustomEvent) {
-    dragOverIndex = e.detail.index
-  }
-
-  function handleDropZoneEnter(index: number) {
-    if (draggedIndex !== null) {
-      dragOverIndex = index
-    }
-  }
-
-  function handleDropZoneLeave() {
-    // Keep the drag over index until we actually drop
-  }
-
-  function handleDropZoneDrop(index: number) {
-    if (draggedIndex !== null && draggedIndex !== index) {
-      reorderTiles(draggedIndex, index)
-    }
-    draggedIndex = null
-    dragOverIndex = null
-    document.removeEventListener('mouseup', handleGlobalMouseUp)
+  function handleDndFinalize(e: CustomEvent) {
+    // Finalize the reorder
+    game.selectedTiles = e.detail.items
+    // Update current word to reflect new order
+    game.currentWord = game.selectedTiles.map(tile => tile.letter).join('')
   }
 
   function handleTileClick(e: CustomEvent) {
@@ -73,27 +39,18 @@
 <!-- svelte-ignore a11y_no_noninteractive_tabindex a11y_no_noninteractive_element_interactions -->
 <div class="word-area" on:keydown={handleKeydown} tabindex="0" role="group" aria-label="Word building area - press Enter to submit, Escape to clear" aria-live="polite">
   <div class="word-area-row">
-    <div class="word-tiles-container">
+    <div 
+      class="word-tiles-container"
+      use:dndzone={{ items: game.selectedTiles, flipDurationMs: 200 }}
+      on:consider={handleDndConsider}
+      on:finalize={handleDndFinalize}
+    >
       {#each game.selectedTiles as tile, index (tile.id)}
         <WordTile 
           {tile} 
           {index}
-          on:dragstart={handleDragStart}
-          on:dragend={handleDragEnd}
           on:click={handleTileClick}
         />
-        {#if draggedIndex !== null}
-          <div 
-            class="drop-zone"
-            class:active={dragOverIndex === index && draggedIndex !== null && draggedIndex !== index}
-            on:mouseenter={() => handleDropZoneEnter(index)}
-            on:mouseleave={() => handleDropZoneLeave()}
-            on:mouseup={() => handleDropZoneDrop(index)}
-            role="button"
-            aria-label="Drop zone for reordering tiles"
-            tabindex="-1"
-          ></div>
-        {/if}
       {/each}
     </div>
     
@@ -169,21 +126,6 @@
     height: 40px;
   }
 
-  .drop-zone {
-    width: 4px;
-    height: 40px;
-    background-color: transparent;
-    transition: all 0.2s ease;
-    border-radius: 4px;
-    margin: 0 1px;
-  }
-
-  .drop-zone.active {
-    width: 20px;
-    background-color: #4CAF50;
-    opacity: 0.7;
-    transform: scaleY(1.2);
-  }
 
   .controls {
     display: flex;

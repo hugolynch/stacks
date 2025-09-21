@@ -7,95 +7,14 @@
 
   const dispatch = createEventDispatcher()
 
-  let isDragging = false
-  let dragStarted = false
-  let dragStartX = 0
-  let dragStartY = 0
-  let dragOffsetX = 0
-  let dragOffsetY = 0
-  let tileElement: HTMLDivElement
-
-  function handleMouseDown(e: MouseEvent) {
-    isDragging = true
-    dragStarted = false
-    dragStartX = e.clientX
-    dragStartY = e.clientY
-    
-    // Calculate offset from mouse to tile center
-    const rect = tileElement.getBoundingClientRect()
-    dragOffsetX = e.clientX - rect.left - rect.width / 2
-    dragOffsetY = e.clientY - rect.top - rect.height / 2
-    
-    // Add global mouse events
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-    
-    e.preventDefault()
-  }
-
-  function handleMouseMove(e: MouseEvent) {
-    if (!isDragging) return
-    
-    const deltaX = e.clientX - dragStartX
-    const deltaY = e.clientY - dragStartY
-    
-    // Only start dragging if moved more than 5 pixels
-    if (!dragStarted && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-      dragStarted = true
-      dispatch('dragstart', { index, tile })
-    }
-    
-    // Update tile position during drag
-    if (dragStarted) {
-      const newX = e.clientX - dragOffsetX
-      const newY = e.clientY - dragOffsetY
-      
-      tileElement.style.position = 'fixed'
-      tileElement.style.left = `${newX}px`
-      tileElement.style.top = `${newY}px`
-      tileElement.style.pointerEvents = 'none'
-    }
-  }
-
-  function handleMouseEnter() {
-    if (dragStarted) {
-      dispatch('dragover', { index, tile })
-    }
-  }
-
-  function handleMouseUp(e: MouseEvent) {
-    if (isDragging) {
-      if (dragStarted) {
-        dispatch('dragend', { index, tile })
-      }
-      
-      // Reset tile position
-      tileElement.style.position = ''
-      tileElement.style.left = ''
-      tileElement.style.top = ''
-      tileElement.style.pointerEvents = ''
-    }
-    
-    isDragging = false
-    dragStarted = false
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', handleMouseUp)
-  }
-
   function handleClick() {
-    if (!isDragging && !dragStarted) {
-      dispatch('click', { index, tile })
-    }
+    dispatch('click', { index, tile })
   }
 </script>
 
 <div 
-  bind:this={tileElement}
   class="word-tile"
-  class:dragging={isDragging}
-  on:mousedown={handleMouseDown}
   on:click={handleClick}
-  on:mouseenter={handleMouseEnter}
   role="button"
   tabindex="0"
   on:keydown={(e) => {
@@ -133,13 +52,6 @@
 
   .word-tile:active {
     cursor: grabbing;
-  }
-
-  .word-tile.dragging {
-    opacity: 0.7;
-    transform: rotate(5deg) scale(1.1);
-    z-index: 1000;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
   }
 
   .word-tile:focus {
