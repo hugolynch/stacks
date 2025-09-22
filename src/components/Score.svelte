@@ -22,7 +22,6 @@
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    margin-top: 10px;
   }
 
   h3 {

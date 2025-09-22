@@ -45,7 +45,7 @@
     border-bottom: 4px solid #E4CBAF;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
   }
 
   .tile.available {

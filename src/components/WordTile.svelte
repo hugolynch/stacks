@@ -41,7 +41,7 @@
     user-select: none;
     font-weight: bold;
     font-size: 18px;
-    transition: all 0.2s ease;
+    transition: all 0.1s ease;
   }
 
   .word-tile:hover {

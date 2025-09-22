@@ -33,6 +33,7 @@ export type GameState = {
   finalScore: number
   penaltyScore: number
   showEndGameConfirmation: boolean
+  isDailyPuzzle: boolean
 }
 
 export type TileState = 'available' | 'selected' | 'visible-unselectable' | 'temp-selectable' | 'hidden'

@@ -18,15 +18,83 @@ export const game = $state<GameState>({
   gameOver: false,
   finalScore: 0,
   penaltyScore: 0,
-  showEndGameConfirmation: false
+  showEndGameConfirmation: false,
+  isDailyPuzzle: false
 })
 
 // Store the original tile bag and swap pool
 let originalTileBag: string[] = []
 let swapPool: string[] = []
 
+// Store timeout reference for clearing feedback
+let feedbackTimeout: number | null = null
+
+// Function to set feedback with auto-clear after 3 seconds
+export function setFeedback(message: string, color: string = 'black') {
+  // Clear any existing timeout
+  if (feedbackTimeout) {
+    clearTimeout(feedbackTimeout)
+  }
+  
+  // Set the feedback
+  game.feedback = message
+  game.feedbackColor = color
+  
+  // Set timeout to clear feedback after 3 seconds (unless it's a permanent message)
+  if (message && !message.includes('Game Over!') && !message.includes('Final Score:')) {
+    feedbackTimeout = setTimeout(() => {
+      game.feedback = ''
+      game.feedbackColor = 'black'
+      feedbackTimeout = null
+    }, 3000)
+  }
+}
+
+// Helper function to count remaining tiles
+function countRemainingTiles(): number {
+  let count = 0
+  for (const layer of game.layers) {
+    count += layer.tiles.length
+  }
+  return count
+}
+
+// Set Daily Puzzle mode
+export function setDailyPuzzleMode(isDaily: boolean) {
+  game.isDailyPuzzle = isDaily
+}
+
+// Callback for Daily Puzzle end game
+let dailyPuzzleEndGameCallback: (() => void) | null = null
+
+// Set callback for Daily Puzzle end game
+export function setDailyPuzzleEndGameCallback(callback: (() => void) | null) {
+  dailyPuzzleEndGameCallback = callback
+}
+
 // Initialize game
 export function initializeGame() {
+  // Clear any existing feedback timeout
+  if (feedbackTimeout) {
+    clearTimeout(feedbackTimeout)
+    feedbackTimeout = null
+  }
+  
+  // Reset all game state
+  game.currentWord = ''
+  game.selectedTiles = []
+  game.usedWords = []
+  game.totalScore = 0
+  game.feedback = ''
+  game.feedbackColor = 'black'
+  game.swapsRemaining = 3
+  game.swapMode = false
+  game.gameOver = false
+  game.finalScore = 0
+  game.penaltyScore = 0
+  game.showEndGameConfirmation = false
+  game.isDailyPuzzle = false
+
   // Load word list
   fetch('./wordlist.txt')
     .then(response => response.text())
@@ -207,8 +275,7 @@ export function toggleTileSelection(tile: Tile) {
   // Handle swap mode - only allow swapping of available tiles
   if (game.swapMode) {
     if (!tile.selectable) {
-      game.feedback = "Can only swap available tiles, not temp-selectable ones"
-      game.feedbackColor = 'red'
+    setFeedback("Can only swap available tiles, not temp-selectable ones", 'red')
       return
     }
     swapTile(tile)
@@ -317,8 +384,7 @@ export function submitWord() {
   // Validate temp-selectable tiles
   const tempSelectableValidation = validateTempSelectableTiles()
   if (!tempSelectableValidation.valid) {
-    game.feedback = tempSelectableValidation.error
-    game.feedbackColor = 'red'
+    setFeedback(tempSelectableValidation.error, 'red')
     return
   }
 
@@ -330,8 +396,7 @@ export function submitWord() {
     const wordScore = calculateWordScore(currentWord.toUpperCase())
     game.totalScore += wordScore
     game.usedWords.push({ word: currentWord.toUpperCase(), score: wordScore })
-    game.feedback = `"${currentWord}" is a valid word!`
-    game.feedbackColor = 'green'
+    setFeedback(`"${currentWord}" is a valid word!`, 'green')
 
     // Remove selected tiles
     game.selectedTiles.forEach(tile => {
@@ -347,9 +412,23 @@ export function submitWord() {
 
     // Update tile states after removal
     updateTileStates()
+    
+    // Check if all tiles are used - if so, end the game automatically
+    if (countRemainingTiles() === 0) {
+      // All tiles used! End the game automatically
+      setFeedback("All tiles used! Game complete!", 'green')
+      
+      if (game.isDailyPuzzle && dailyPuzzleEndGameCallback) {
+        // Use Daily Puzzle specific end game handler
+        dailyPuzzleEndGameCallback()
+      } else {
+        // Use regular end game handler
+        confirmEndGame()
+      }
+      return
+    }
   } else {
-    game.feedback = `"${currentWord}" is not a valid word.`
-    game.feedbackColor = 'red'
+    setFeedback(`"${currentWord}" is not a valid word.`, 'red')
   }
 
   // Clear current selection
@@ -414,10 +493,11 @@ function generateWildcardPermutations(word: string): string[] {
 
 // Calculate word score using custom scoring values
 function calculateWordScore(word: string): number {
-  const length = word.length
+  // Exclude wildcard tiles (*) from word length for scoring
+  const length = word.replace(/\*/g, '').length
   
   // Custom scoring values based on word length
-  const scores = {
+  const scores: { [key: number]: number } = {
     1: 0,
     2: 1,
     3: 3,
@@ -492,18 +572,15 @@ export function getCurrentWordScore(): number {
 // Toggle swap mode
 export function toggleSwapMode() {
   if (game.swapsRemaining <= 0) {
-    game.feedback = "No swaps remaining!"
-    game.feedbackColor = 'red'
+    setFeedback("No swaps remaining!", 'red')
     return
   }
   
   game.swapMode = !game.swapMode
   if (game.swapMode) {
-    game.feedback = "Click a tile to swap it for a new one"
-    game.feedbackColor = 'blue'
+    setFeedback("Click a tile to swap it for a new one", 'blue')
   } else {
-    game.feedback = "Swap mode cancelled"
-    game.feedbackColor = 'black'
+    setFeedback("Swap mode cancelled", 'black')
   }
 }
 
@@ -517,8 +594,7 @@ export function swapTile(tile: Tile) {
   
   // Check if we have tiles available in the swap pool
   if (currentSwapPool.length === 0) {
-    game.feedback = "No more tiles available for swapping!"
-    game.feedbackColor = 'red'
+    setFeedback("No more tiles available for swapping!", 'red')
     return
   }
   
@@ -544,8 +620,7 @@ export function swapTile(tile: Tile) {
   game.swapMode = false
   
   // Update feedback
-  game.feedback = `Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${currentSwapPool.length} tiles left)`
-  game.feedbackColor = 'green'
+  setFeedback(`Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${currentSwapPool.length} tiles left)`, 'green')
   
   // No need to trigger full re-render since we only changed one tile's letter
   // The tile component will automatically update due to the letter change
@@ -588,6 +663,7 @@ export function confirmEndGame() {
   clearSelection()
   
   // Update feedback
+  // Game over feedback should be permanent, so set it directly
   game.feedback = `Game Over! Final Score: ${game.finalScore} (${game.totalScore} - ${game.penaltyScore} penalty)`
   game.feedbackColor = game.finalScore >= 0 ? 'green' : 'red'
 }

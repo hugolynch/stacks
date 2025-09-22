@@ -67,6 +67,12 @@
   
   <div class="controls">
     <button on:click={clearSelection} disabled={game.currentWord.length === 0 || game.gameOver}>
+      <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3,6 5,6 21,6"></polyline>
+        <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+        <line x1="10" y1="11" x2="10" y2="17"></line>
+        <line x1="14" y1="11" x2="14" y2="17"></line>
+      </svg>
       Clear
     </button>
     <button 
@@ -74,9 +80,18 @@
       disabled={game.swapsRemaining <= 0 || game.gameOver}
       class:swap-mode={game.swapMode}
     >
+      <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+        <path d="M21 3v5h-5"></path>
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+        <path d="M3 21v-5h5"></path>
+      </svg>
       Swap ({game.swapsRemaining})
     </button>
     <button on:click={submitWord} disabled={game.currentWord.length === 0 || game.gameOver}>
+      <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20,6 9,17 4,12"></polyline>
+      </svg>
       Submit
     </button>
   </div>
@@ -117,7 +132,7 @@
   }
 
   .word-tiles-container:empty::before {
-    content: "Select tiles to build your word";
+    content: "Select tiles to make a word";
     color: #999;
     font-style: italic;
     display: flex;
@@ -142,7 +157,10 @@
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   button:hover:not(:disabled) {
@@ -168,6 +186,7 @@
     margin: 0;
     font-weight: bold;
     min-height: 1.2em;
+    height: 16px;
   }
 
   .potential-score {
@@ -181,5 +200,11 @@
     border-radius: 8px;
     font-size: 18px;
     font-weight: 700;
+  }
+
+  .button-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
 </style>

@@ -14,7 +14,7 @@
     resetDailyPuzzleForReplay,
     saveDailyProgress
   } from '../lib/daily-puzzle'
-  import { game, initializeGame, showEndGameConfirmation, cancelEndGame, confirmEndGame } from '../lib/state.svelte'
+  import { game, initializeGame, showEndGameConfirmation, cancelEndGame, confirmEndGame, setFeedback, setDailyPuzzleMode, setDailyPuzzleEndGameCallback } from '../lib/state.svelte'
   import Board from './Board.svelte'
   import WordArea from './WordArea.svelte'
   import Score from './Score.svelte'
@@ -30,7 +30,16 @@
     attempts: 0
   })
 
+  // Share button state
+  let shareButtonText = $state('Share')
+
   onMount(() => {
+    // Set Daily Puzzle mode
+    setDailyPuzzleMode(true)
+    
+    // Register the Daily Puzzle end game callback
+    setDailyPuzzleEndGameCallback(handleDailyEndGame)
+    
     initializeDailyPuzzle()
   })
 
@@ -118,7 +127,7 @@
   // Update best score when words are submitted
   function updateBestScore() {
     // Calculate current penalty based on remaining tiles
-    const remainingTiles = game.layers.flatMap(layer => layer.tiles)
+    const remainingTiles = game.layers.reduce((acc: any[], layer: any) => acc.concat(layer.tiles), [])
     const currentPenalty = remainingTiles.length * 3
     
     // Calculate current final score (words score - penalty for unused tiles)
@@ -208,12 +217,16 @@ Attempts: ${dailyData.attempts}`
 
     try {
       await navigator.clipboard.writeText(statsText)
-      game.feedback = 'Stats copied to clipboard!'
-      game.feedbackColor = 'green'
+      setFeedback('Stats copied to clipboard!', 'green')
+      
+      // Change button text to "Copied" for 3 seconds
+      shareButtonText = 'Copied'
+      setTimeout(() => {
+        shareButtonText = 'Share'
+      }, 3000)
     } catch (err) {
       console.error('Failed to copy to clipboard:', err)
-      game.feedback = 'Failed to copy to clipboard'
-      game.feedbackColor = 'red'
+      setFeedback('Failed to copy to clipboard', 'red')
     }
   }
 </script>
@@ -232,7 +245,7 @@ Attempts: ${dailyData.attempts}`
         <div class="completion-title">Daily puzzle completed!</div>
         <div class="score-breakdown">
           <div class="words-found">
-            <div class="words-title">Words found:</div>
+            <div class="words-title">Words found this attempt</div>
             <div class="words-list">
               {#each game.usedWords as wordData (wordData.word)}
                 <span class="word-pill">{wordData.word} ({wordData.score})</span>
@@ -246,27 +259,43 @@ Attempts: ${dailyData.attempts}`
           </div>
           <div class="final-score">
             Final score: {game.finalScore}
+            {#if game.finalScore === dailyData.bestScore && game.finalScore > 0}
+              <span class="best-pill">best</span>
+            {/if}
           </div>
         </div>
         <div class="score-stats">
           <div class="score-item">
-            <span class="score-label">First Score:</span>
+            <span class="score-label">First Score</span>
             <span class="score-value">{dailyData.firstScore}</span>
           </div>
           <div class="score-item">
-            <span class="score-label">Best Score:</span>
+            <span class="score-label">Best Score</span>
             <span class="score-value">{dailyData.bestScore}</span>
           </div>
           <div class="score-item">
-            <span class="score-label">Attempts:</span>
+            <span class="score-label">Attempts</span>
             <span class="score-value">{dailyData.attempts}</span>
           </div>
         </div>
         <div class="completion-actions">
           <button onclick={shareStats} class="share-button">
-            Share
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            {shareButtonText}
           </button>
           <button onclick={resetDailyPuzzle} class="reset-button">
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+              <path d="M21 3v5h-5"></path>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+              <path d="M3 21v-5h5"></path>
+            </svg>
             Play Again
           </button>
         </div>
@@ -275,21 +304,26 @@ Attempts: ${dailyData.attempts}`
   {/if}
 
   <!-- Game Board -->
-  <div class="game-page">
-    <Board />
-    <WordArea />
-    <Score />
+  {#if !game.gameOver}
+    <div class="game-page">
+      <Board />
+      <WordArea />
+      <Score />
 
-    <div class="bottom-controls">
-      <button
-        onclick={handleDailyEndGame}
-        disabled={game.gameOver}
-        class="done-button"
-      >
-        Done
-      </button>
+      <div class="bottom-controls">
+        <button
+          onclick={handleDailyEndGame}
+          disabled={game.gameOver}
+          class="done-button"
+        >
+          <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20,6 9,17 4,12"></polyline>
+          </svg>
+          Done
+        </button>
+      </div>
     </div>
-  </div>
+  {/if}
 
 
   <!-- Confirmation Dialog -->
@@ -334,7 +368,6 @@ Attempts: ${dailyData.attempts}`
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    min-height: 100vh;
   }
 
   .daily-header {
@@ -354,16 +387,11 @@ Attempts: ${dailyData.attempts}`
     font-weight: bold;
   }
 
-  .seed-info {
-    font-size: 0.9em;
-    opacity: 0.7;
-    color: #666;
-  }
 
   .completion-banner {
     background-color: #f8f9fa;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 4px;
     border: 1px solid #dee2e6;
     text-align: center;
     max-width: 400px;
@@ -391,8 +419,8 @@ Attempts: ${dailyData.attempts}`
 
   .score-stats {
     display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
+    gap: 16px;
+    flex-wrap: nowrap;
     justify-content: center;
   }
 
@@ -401,18 +429,28 @@ Attempts: ${dailyData.attempts}`
     flex-direction: column;
     align-items: center;
     gap: 5px;
+    padding: 12px 16px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: white;
+    min-width: 100px;
+    flex: 1;
   }
 
   .score-label {
     font-size: 0.9em;
     color: #666;
     margin-bottom: 3px;
+    white-space: nowrap;
+    text-align: center;
   }
 
   .score-value {
     font-size: 1.1em;
     font-weight: 600;
     color: #333;
+    white-space: nowrap;
+    text-align: center;
   }
 
   .score-breakdown {
@@ -422,16 +460,16 @@ Attempts: ${dailyData.attempts}`
     padding: 16px;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-  }
-
-  .words-found {
-    margin-bottom: 5px;
+    width: 100%;
+    background-color: white;
   }
 
   .words-title {
-    font-weight: 500;
-    margin-bottom: 16px;
-    color: #333;
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    text-align: center;
   }
 
   .words-list {
@@ -459,6 +497,21 @@ Attempts: ${dailyData.attempts}`
   .final-score {
     font-weight: bold;
     color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .best-pill {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .completion-actions {
@@ -477,7 +530,10 @@ Attempts: ${dailyData.attempts}`
     font-family: inherit;
     font-size: 14px;
     font-weight: 500;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .share-button:hover {
@@ -494,7 +550,10 @@ Attempts: ${dailyData.attempts}`
     font-family: inherit;
     font-size: 14px;
     font-weight: 500;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .reset-button:hover {
@@ -511,7 +570,6 @@ Attempts: ${dailyData.attempts}`
 
   .bottom-controls {
     margin-top: auto;
-    padding: 20px 0;
   }
 
   .done-button {
@@ -523,7 +581,10 @@ Attempts: ${dailyData.attempts}`
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .done-button:hover:not(:disabled) {
@@ -582,7 +643,7 @@ Attempts: ${dailyData.attempts}`
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
   }
 
   .cancel-button:hover {
@@ -597,5 +658,11 @@ Attempts: ${dailyData.attempts}`
 
   .confirm-button:hover {
     background-color: #c82333;
+  }
+
+  .button-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
 </style>

@@ -215,7 +215,8 @@ document.addEventListener("DOMContentLoaded", () => {
         history = [];
     });
     function calculateWordScore(word) {
-        const length = word.length;
+        // Exclude wildcard tiles (*) from word length for scoring
+        const length = word.replace(/\*/g, '').length;
         const scores = {
             1: 0, 2: 1, 3: 3, 4: 5, 5: 8, 6: 12, 7: 17, 8: 23,
             9: 30, 10: 38, 11: 47, 12: 57, 13: 68, 14: 80, 15: 93, 16: 107

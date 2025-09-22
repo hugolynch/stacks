@@ -1,27 +1,36 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { game, initializeGame, showEndGameConfirmation, cancelEndGame, confirmEndGame } from './lib/state.svelte'
+  import { game, initializeGame, confirmEndGame, setDailyPuzzleMode } from './lib/state.svelte'
   import Board from './components/Board.svelte'
   import WordArea from './components/WordArea.svelte'
   import Score from './components/Score.svelte'
   import DailyPuzzle from './components/DailyPuzzle.svelte'
+  import Instructions from './components/Instructions.svelte'
   const logo = './logo.svg'
 
   // Navigation state
-  let currentPage = $state<'main' | 'daily'>('main')
+  let currentPage = $state<'main' | 'daily' | 'instructions'>('main')
 
   onMount(() => {
+    // Set to regular game mode (not Daily Puzzle)
+    setDailyPuzzleMode(false)
     initializeGame()
   })
 
   function goToMainGame() {
     currentPage = 'main'
+    // Set to regular game mode (not Daily Puzzle)
+    setDailyPuzzleMode(false)
     // Reset game state and generate new puzzle for free play
     initializeGame()
   }
 
   function goToDailyPuzzle() {
     currentPage = 'daily'
+  }
+
+  function goToInstructions() {
+    currentPage = 'instructions'
   }
 </script>
 
@@ -44,6 +53,13 @@
     >
       Daily Puzzle
     </button>
+    <button 
+      class="nav-button" 
+      class:active={currentPage === 'instructions'}
+      onclick={goToInstructions}
+    >
+      Instructions
+    </button>
   </nav>
 
   <!-- Main Game Page -->
@@ -54,13 +70,30 @@
       <Score />
       
       <div class="bottom-controls">
-        <button 
-          onclick={showEndGameConfirmation} 
-          disabled={game.gameOver}
-          class="done-button"
-        >
-          End Game
-        </button>
+        {#if game.gameOver}
+          <button 
+            onclick={goToMainGame} 
+            class="new-game-button"
+          >
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+              <path d="M21 3v5h-5"></path>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+              <path d="M3 21v-5h5"></path>
+            </svg>
+            New Game
+          </button>
+        {:else}
+          <button 
+            onclick={confirmEndGame} 
+            class="done-button"
+          >
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+            End Game
+          </button>
+        {/if}
       </div>
     </div>
   {/if}
@@ -70,38 +103,11 @@
     <DailyPuzzle />
   {/if}
 
-  <!-- Confirmation Dialog -->
-  {#if game.showEndGameConfirmation}
-    <div 
-      class="confirmation-overlay" 
-      onclick={cancelEndGame}
-      onkeydown={(e) => e.key === 'Escape' && cancelEndGame()}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dialog-title"
-      tabindex="-1"
-    >
-      <div 
-        class="confirmation-dialog" 
-        onclick={(e) => e.stopPropagation()}
-        onkeydown={(e) => e.key === 'Escape' && cancelEndGame()}
-        role="alertdialog"
-        tabindex="0"
-      >
-        <h3 id="dialog-title">End Game?</h3>
-        <p>Are you sure you want to end the game? You'll receive a penalty for any remaining letters.</p>
-        
-        <div class="confirmation-buttons">
-          <button onclick={cancelEndGame} class="cancel-button">
-            Cancel
-          </button>
-          <button onclick={confirmEndGame} class="confirm-button">
-            End Game
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Instructions Page -->
+  {#if currentPage === 'instructions'}
+    <Instructions />
   {/if}
+
 </main>
 
 <style>
@@ -112,7 +118,6 @@
     align-items: center;
     gap: 20px;
     padding: 20px;
-    min-height: 100vh;
   }
 
   img {
@@ -136,7 +141,6 @@
   .page-nav {
     display: flex;
     gap: 10px;
-    margin-bottom: 10px;
   }
 
   .nav-button {
@@ -147,7 +151,7 @@
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
   }
 
   .nav-button:hover:not(:disabled) {
@@ -175,7 +179,6 @@
 
   .bottom-controls {
     margin-top: auto;
-    padding: 20px 0;
   }
 
   .done-button {
@@ -187,7 +190,10 @@
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .done-button:hover:not(:disabled) {
@@ -199,76 +205,29 @@
     cursor: not-allowed;
   }
 
-  .confirmation-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-
-  .confirmation-dialog {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    text-align: center;
-  }
-
-  .confirmation-dialog h3 {
-    margin: 0 0 16px 0;
-    font-size: 1.5em;
-    color: #333;
-  }
-
-  .confirmation-dialog p {
-    margin: 0 0 24px 0;
-    color: #666;
-    line-height: 1.5;
-  }
-
-  .confirmation-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-  }
-
-  .cancel-button, .confirm-button {
-    padding: 10px 20px;
-    border: 2px solid;
-    border-radius: 6px;
+  .new-game-button {
+    padding: 8px 16px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
-    font-weight: bold;
-    transition: all 0.2s ease;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .cancel-button {
-    background-color: white;
-    color: #6c757d;
-    border-color: #6c757d;
+  .new-game-button:hover {
+    background-color: #0056b3;
   }
 
-  .cancel-button:hover {
-    background-color: #6c757d;
-    color: white;
+  .button-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
 
-  .confirm-button {
-    background-color: #dc3545;
-    color: white;
-    border-color: #c82333;
-  }
-
-  .confirm-button:hover {
-    background-color: #c82333;
-  }
 </style>
