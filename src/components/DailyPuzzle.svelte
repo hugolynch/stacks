@@ -123,8 +123,10 @@
     
     // Calculate current final score (words score - penalty for unused tiles)
     const currentFinalScore = game.totalScore - currentPenalty
-    updateTodayBestScore(currentFinalScore)
     dailyData.bestScore = Math.max(dailyData.bestScore, currentFinalScore)
+    
+    // Save to localStorage without calling updateTodayBestScore to avoid overwriting firstScore
+    saveDailyProgress(dailyData)
   }
 
   // Handle daily puzzle end game
@@ -136,9 +138,12 @@
     dailyData.isCompleted = true
     if (dailyData.attempts === 0) {
       dailyData.firstScore = game.finalScore
+      console.log('Setting first score:', game.finalScore)
     }
     dailyData.bestScore = Math.max(dailyData.bestScore, game.finalScore)
     dailyData.attempts += 1
+    
+    console.log('Daily data after update:', dailyData)
     
     // Save the updated data to localStorage
     saveDailyProgress(dailyData)
@@ -180,7 +185,9 @@
 
   // Format date for display
   function formatDate(dateString: string): string {
-    const date = new Date(dateString)
+    // Parse the date string and create a local date to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number)
+    const date = new Date(year, month - 1, day) // month is 0-indexed
     return date.toLocaleDateString('en-US', { 
       weekday: 'long', 
       year: 'numeric', 
