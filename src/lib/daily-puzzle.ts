@@ -11,6 +11,7 @@ export interface DailyPuzzleData {
   attempts: number;      // Number of attempts
   longestWordLength: number; // Length of longest word submitted
   longestWord: string;   // Actual longest word submitted
+  allWordsFound: string[]; // All unique words found across all attempts
 }
 
 // Generate a consistent seed based on date
@@ -33,6 +34,36 @@ export function getTodayDate(): string {
   return `${year}-${month}-${day}`
 }
 
+// Get daily puzzle data for a specific date
+export function getDailyPuzzleDataForDate(date: string): DailyPuzzleData | null {
+  const seed = generateDailySeed(date)
+  
+  // Check if we have saved data for this date
+  const savedData = localStorage.getItem(`daily-${date}`)
+  
+  if (savedData) {
+    try {
+      const parsed = JSON.parse(savedData)
+      return {
+        date: date,
+        seed: seed,
+        isCompleted: parsed.isCompleted || false,
+        firstScore: parsed.firstScore || 0,
+        bestScore: parsed.bestScore || 0,
+        attempts: parsed.attempts || 0,
+        longestWordLength: parsed.longestWordLength || 0,
+        longestWord: parsed.longestWord || '',
+        allWordsFound: parsed.allWordsFound || []
+      }
+    } catch (e) {
+      console.error('Error parsing saved daily data:', e)
+    }
+  }
+  
+  // Return null if no data found for this date
+  return null
+}
+
 // Get daily puzzle data for today
 export function getDailyPuzzleData(): DailyPuzzleData {
   const today = getTodayDate()
@@ -52,7 +83,8 @@ export function getDailyPuzzleData(): DailyPuzzleData {
         bestScore: parsed.bestScore || 0,
         attempts: parsed.attempts || 0,
         longestWordLength: parsed.longestWordLength || 0,
-        longestWord: parsed.longestWord || ''
+        longestWord: parsed.longestWord || '',
+        allWordsFound: parsed.allWordsFound || []
       }
     } catch (error) {
       console.error('Error parsing saved daily puzzle data:', error)
@@ -68,7 +100,8 @@ export function getDailyPuzzleData(): DailyPuzzleData {
     bestScore: 0,
     attempts: 0,
     longestWordLength: 0,
-    longestWord: ''
+    longestWord: '',
+    allWordsFound: []
   }
 }
 
@@ -80,7 +113,8 @@ export function saveDailyProgress(data: DailyPuzzleData): void {
     bestScore: data.bestScore,
     attempts: data.attempts,
     longestWordLength: data.longestWordLength,
-    longestWord: data.longestWord
+    longestWord: data.longestWord,
+    allWordsFound: data.allWordsFound
   }
   localStorage.setItem(`daily-${data.date}`, JSON.stringify(saveData))
 }

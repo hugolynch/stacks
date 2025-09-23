@@ -31,7 +31,8 @@
     bestScore: 0,
     attempts: 0,
     longestWordLength: 0,
-    longestWord: ''
+    longestWord: '',
+    allWordsFound: [] as string[]
   })
 
   // Share button state
@@ -181,6 +182,21 @@
     }
   }
 
+  // Update all words found across all attempts (no duplicates)
+  function updateAllWordsFound() {
+    if (game.usedWords.length > 0) {
+      const currentWords = game.usedWords.map(w => w.word)
+      const existingWords = new Set(dailyData.allWordsFound)
+      
+      // Add new words that aren't already in the list
+      currentWords.forEach(word => {
+        if (!existingWords.has(word)) {
+          dailyData.allWordsFound.push(word)
+        }
+      })
+    }
+  }
+
   // Handle daily puzzle end game
   function handleDailyEndGame() {
     // Call the regular confirmEndGame function
@@ -193,6 +209,9 @@
     }
     dailyData.bestScore = Math.max(dailyData.bestScore, game.finalScore)
     dailyData.attempts += 1
+    
+    // Update all words found across all attempts
+    updateAllWordsFound()
     
     // Save the updated data to localStorage
     saveDailyProgress(dailyData)
@@ -216,6 +235,7 @@
     dailyData.isCompleted = false
     dailyData.longestWordLength = 0
     dailyData.longestWord = ''
+    dailyData.allWordsFound = []
     
     // Reset game state to fresh puzzle
     game.currentWord = ''

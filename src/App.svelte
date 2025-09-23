@@ -6,16 +6,17 @@
   import Score from './components/Score.svelte'
   import DailyPuzzle from './components/DailyPuzzle.svelte'
   import Instructions from './components/Instructions.svelte'
+  import Archive from './components/Archive.svelte'
   const logo = './logo.svg'
 
   // Navigation state
-  let currentPage = $state<'main' | 'daily' | 'instructions'>('main')
+  let currentPage = $state<'main' | 'daily' | 'instructions' | 'archive'>('main')
 
   onMount(() => {
     // Restore page state from localStorage
     const savedPage = localStorage.getItem('stacks-current-page')
-    if (savedPage && ['main', 'daily', 'instructions'].includes(savedPage)) {
-      currentPage = savedPage as 'main' | 'daily' | 'instructions'
+    if (savedPage && ['main', 'daily', 'instructions', 'archive'].includes(savedPage)) {
+      currentPage = savedPage as 'main' | 'daily' | 'instructions' | 'archive'
     }
 
     // Set to regular game mode (not Daily Puzzle) unless on daily page
@@ -45,6 +46,11 @@
     currentPage = 'instructions'
     localStorage.setItem('stacks-current-page', 'instructions')
   }
+
+  function goToArchive() {
+    currentPage = 'archive'
+    localStorage.setItem('stacks-current-page', 'archive')
+  }
 </script>
 
 <main>
@@ -68,10 +74,17 @@
     </button>
     <button 
       class="nav-button" 
+      class:active={currentPage === 'archive'}
+      onclick={goToArchive}
+    >
+      Archive
+    </button>
+    <button 
+      class="nav-button" 
       class:active={currentPage === 'instructions'}
       onclick={goToInstructions}
     >
-      Instructions
+      ?
     </button>
   </nav>
 
@@ -119,6 +132,11 @@
   <!-- Instructions Page -->
   {#if currentPage === 'instructions'}
     <Instructions />
+  {/if}
+
+  <!-- Archive Page -->
+  {#if currentPage === 'archive'}
+    <Archive />
   {/if}
 
 </main>
