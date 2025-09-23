@@ -469,9 +469,7 @@
     align-items: center;
     gap: 20px;
     width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 16px;
+    padding: 0;
   }
 
   .instructions-content {
@@ -479,6 +477,7 @@
     border-radius: 4px;
     padding: 24px;
     width: 100%;
+    max-width: 800px;
     line-height: 1.6;
     border: 1px solid #e9ecef;
     box-sizing: border-box;
@@ -922,11 +921,6 @@
   }
 
   @media (max-width: 768px) {
-    .instructions-page {
-      padding: 0;
-      gap: 12px;
-    }
-    
     .instructions-content {
       background: transparent;
       border: none;
@@ -1049,10 +1043,6 @@
   }
 
   @media (max-width: 480px) {
-    .instructions-page {
-      padding: 0;
-    }
-    
     .instructions-content {
       padding: 4px;
     }

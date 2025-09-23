@@ -131,21 +131,52 @@
     align-items: center;
     gap: 20px;
     padding: 20px;
+    box-sizing: border-box;
   }
 
   img {
     height: 60px;
     max-width: 100%;
     width: auto;
+    display: block;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 768px) {
+    main {
+      padding: 16px;
+    }
+    
+    img {
+      height: 55px;
+    }
   }
 
   @media (max-width: 480px) {
+    main {
+      padding: 12px;
+    }
+    
     img {
       height: 50px;
     }
   }
 
+  @media (max-width: 360px) {
+    main {
+      padding: 8px;
+    }
+    
+    img {
+      height: 45px;
+    }
+  }
+
   @media (max-width: 320px) {
+    main {
+      padding: 6px;
+    }
+    
     img {
       height: 40px;
     }
