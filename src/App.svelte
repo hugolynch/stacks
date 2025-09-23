@@ -12,13 +12,24 @@
   let currentPage = $state<'main' | 'daily' | 'instructions'>('main')
 
   onMount(() => {
-    // Set to regular game mode (not Daily Puzzle)
-    setDailyPuzzleMode(false)
-    initializeGame()
+    // Restore page state from localStorage
+    const savedPage = localStorage.getItem('stacks-current-page')
+    if (savedPage && ['main', 'daily', 'instructions'].includes(savedPage)) {
+      currentPage = savedPage as 'main' | 'daily' | 'instructions'
+    }
+
+    // Set to regular game mode (not Daily Puzzle) unless on daily page
+    setDailyPuzzleMode(currentPage === 'daily')
+    
+    // Only initialize game if on main page
+    if (currentPage === 'main') {
+      initializeGame()
+    }
   })
 
   function goToMainGame() {
     currentPage = 'main'
+    localStorage.setItem('stacks-current-page', 'main')
     // Set to regular game mode (not Daily Puzzle)
     setDailyPuzzleMode(false)
     // Reset game state and generate new puzzle for free play
@@ -27,10 +38,12 @@
 
   function goToDailyPuzzle() {
     currentPage = 'daily'
+    localStorage.setItem('stacks-current-page', 'daily')
   }
 
   function goToInstructions() {
     currentPage = 'instructions'
+    localStorage.setItem('stacks-current-page', 'instructions')
   }
 </script>
 

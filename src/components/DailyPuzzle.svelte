@@ -12,7 +12,9 @@
     loadDailyGameState,
     clearDailyGameState,
     resetDailyPuzzleForReplay,
-    saveDailyProgress
+    saveDailyProgress,
+    saveDailyCompletionData,
+    loadDailyCompletionData
   } from '../lib/daily-puzzle'
   import { game, initializeGame, showEndGameConfirmation, cancelEndGame, confirmEndGame, setFeedback, setDailyPuzzleMode, setDailyPuzzleEndGameCallback } from '../lib/state.svelte'
   import Board from './Board.svelte'
@@ -68,17 +70,38 @@
         .then(response => response.text())
         .then(data => {
           game.wordList = new Set(data.split('\n').map(word => word.trim().toUpperCase()))
-          console.log('Daily puzzle wordlist loaded:', game.wordList.size, 'words')
         })
         .catch(err => console.error('Error loading wordlist:', err))
     }
 
-    // Try to load saved game state
+    // Check if puzzle is completed and load completion data
+    if (dailyData.isCompleted) {
+      const completionData = loadDailyCompletionData(dailyData.date)
+      if (completionData) {
+        // Restore completion-specific game state for banner display
+        game.usedWords = completionData.usedWords || []
+        game.finalScore = completionData.finalScore || 0
+        game.penaltyScore = completionData.penaltyScore || 0
+        game.gameOver = completionData.gameOver || true
+        
+        // Generate the puzzle layout for display (but don't make it playable)
+        const puzzle = generateDailyPuzzle(dailyData.seed)
+        game.layers = puzzle.layers
+        ;(window as any).dailySwapPool = puzzle.swapPool
+        ;(window as any).dailyRng = puzzle.rng
+        return
+      } else {
+        // If completion data is missing, reset the completion status
+        dailyData.isCompleted = false
+        saveDailyProgress(dailyData)
+      }
+    }
+
+    // Try to load saved game state (for in-progress puzzles)
     const savedState = loadDailyGameState()
     
     if (savedState) {
       // Restore saved state
-      console.log('Loading saved daily puzzle state')
       game.currentWord = savedState.currentWord
       game.selectedTiles = savedState.selectedTiles
       game.usedWords = savedState.usedWords
@@ -99,7 +122,6 @@
       ;(window as any).dailyRng = puzzle.rng
     } else {
       // No saved state, start fresh
-      console.log('Starting fresh daily puzzle')
       game.currentWord = ''
       game.selectedTiles = []
       game.usedWords = []
@@ -147,15 +169,15 @@
     dailyData.isCompleted = true
     if (dailyData.attempts === 0) {
       dailyData.firstScore = game.finalScore
-      console.log('Setting first score:', game.finalScore)
     }
     dailyData.bestScore = Math.max(dailyData.bestScore, game.finalScore)
     dailyData.attempts += 1
     
-    console.log('Daily data after update:', dailyData)
-    
     // Save the updated data to localStorage
     saveDailyProgress(dailyData)
+    
+    // Save completion data for banner display
+    saveDailyCompletionData(dailyData, game)
     
     // Clear the saved game state since puzzle is completed
     clearDailyGameState()
@@ -165,6 +187,9 @@
   function resetDailyPuzzle() {
     // Clear the current game state
     resetDailyPuzzleForReplay()
+    
+    // Clear completion data
+    localStorage.removeItem(`daily-completion-${dailyData.date}`)
     
     // Reset completion status to hide banner
     dailyData.isCompleted = false

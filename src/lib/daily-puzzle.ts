@@ -38,6 +38,7 @@ export function getDailyPuzzleData(): DailyPuzzleData {
   
   // Check if we have saved data for today
   const savedData = localStorage.getItem(`daily-${today}`)
+  
   if (savedData) {
     try {
       const parsed = JSON.parse(savedData)
@@ -74,6 +75,35 @@ export function saveDailyProgress(data: DailyPuzzleData): void {
     attempts: data.attempts
   }
   localStorage.setItem(`daily-${data.date}`, JSON.stringify(saveData))
+}
+
+// Save daily puzzle completion data (for banner display)
+export function saveDailyCompletionData(data: DailyPuzzleData, gameState: any): void {
+  const completionData = {
+    isCompleted: data.isCompleted,
+    firstScore: data.firstScore,
+    bestScore: data.bestScore,
+    attempts: data.attempts,
+    // Save completion-specific game state for banner display
+    usedWords: gameState.usedWords,
+    finalScore: gameState.finalScore,
+    penaltyScore: gameState.penaltyScore,
+    gameOver: gameState.gameOver
+  }
+  localStorage.setItem(`daily-completion-${data.date}`, JSON.stringify(completionData))
+}
+
+// Load daily puzzle completion data
+export function loadDailyCompletionData(date: string): any | null {
+  try {
+    const savedData = localStorage.getItem(`daily-completion-${date}`)
+    if (savedData) {
+      return JSON.parse(savedData)
+    }
+  } catch (error) {
+    console.error('Error loading daily completion data:', error)
+  }
+  return null
 }
 
 // Save daily puzzle game state
