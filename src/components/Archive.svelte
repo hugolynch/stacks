@@ -17,32 +17,28 @@
     loadWordList()
   })
 
-  // Track longest word and all words found when playing archive puzzles
+  // Track all words found when playing archive puzzles (for real-time unique word count)
   $effect(() => {
-    if (isReplaying && game.usedWords.length > 0) {
-      const longestWordData = game.usedWords.reduce((longest, current) => 
-        current.word.length > longest.word.length ? current : longest
-      )
-      
-      if (longestWordData.word.length > selectedPuzzleData.longestWordLength) {
-        selectedPuzzleData.longestWordLength = longestWordData.word.length
-        selectedPuzzleData.longestWord = longestWordData.word
-      }
-
-      // Update all words found (no duplicates)
+    if (isReplaying && game.usedWords.length > 0 && selectedPuzzleData) {
+      // Update all words found (no duplicates) - only add new words
       const currentWords = game.usedWords.map(w => w.word)
       const existingWords = new Set(selectedPuzzleData.allWordsFound)
       
+      let hasNewWords = false
       currentWords.forEach(word => {
         if (!existingWords.has(word)) {
           selectedPuzzleData.allWordsFound.push(word)
+          hasNewWords = true
         }
       })
 
-      // Save the updated data to localStorage to keep it in sync
-      saveDailyProgress(selectedPuzzleData)
+      // Save the updated data to localStorage if we added new words
+      if (hasNewWords) {
+        saveDailyProgress(selectedPuzzleData)
+      }
     }
   })
+
 
   function loadWordList() {
     // Load word list if not already loaded
@@ -69,8 +65,8 @@
     const dates: string[] = []
     const today = new Date()
     
-    // Generate dates for the last 30 days using local time
-    for (let i = 0; i < 30; i++) {
+    // Generate dates for the last 30 days using local time, starting from yesterday
+    for (let i = 1; i <= 30; i++) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
       const dateString = getLocalDateString(date)
@@ -79,7 +75,7 @@
     
     availableDates = dates
     if (dates.length > 0) {
-      selectedDate = dates[0] // Default to most recent
+      selectedDate = dates[0] // Default to most recent (yesterday)
       loadSelectedPuzzle()
     }
   }
@@ -90,17 +86,8 @@
     // Always generate the same seed for this date (consistent with daily puzzle)
     const seed = generateDailySeed(selectedDate)
     
-    // Check if this is today's puzzle
-    const today = getTodayDate()
-    let dailyData
-    
-    if (selectedDate === today) {
-      // For today's puzzle, use the same function as daily puzzle to get current data
-      dailyData = getDailyPuzzleData()
-    } else {
-      // For historical puzzles, get saved data
-      dailyData = getDailyPuzzleDataForDate(selectedDate)
-    }
+    // Get saved data for this historical puzzle
+    const dailyData = getDailyPuzzleDataForDate(selectedDate)
     
     if (dailyData) {
       // Use existing saved data (but ensure seed is correct)
@@ -144,11 +131,17 @@
     
     // Reset game state first
     game.currentWord = ''
+    game.selectedTiles = []
     game.usedWords = []
+    game.totalScore = 0
     game.finalScore = 0
     game.penaltyScore = 0
     game.gameOver = false
     game.showEndGameConfirmation = false
+    game.feedback = ''
+    game.feedbackColor = 'black'
+    game.swapsRemaining = 3
+    game.swapMode = false
     
     // Generate the puzzle with the selected seed
     const puzzle = generateDailyPuzzle(selectedPuzzleData.seed)
@@ -182,6 +175,30 @@
       
       // Increment attempts
       selectedPuzzleData.attempts += 1
+      
+      // Update longest word if current attempt has a longer word
+      if (game.usedWords.length > 0) {
+        const longestWordData = game.usedWords.reduce((longest, current) => 
+          current.word.length > longest.word.length ? current : longest
+        )
+        
+        if (longestWordData.word.length > selectedPuzzleData.longestWordLength) {
+          selectedPuzzleData.longestWordLength = longestWordData.word.length
+          selectedPuzzleData.longestWord = longestWordData.word
+        }
+      }
+      
+      // Update all words found (no duplicates)
+      if (game.usedWords.length > 0) {
+        const currentWords = game.usedWords.map(w => w.word)
+        const existingWords = new Set(selectedPuzzleData.allWordsFound)
+        
+        currentWords.forEach(word => {
+          if (!existingWords.has(word)) {
+            selectedPuzzleData.allWordsFound.push(word)
+          }
+        })
+      }
       
       // Save the updated data
       saveDailyProgress(selectedPuzzleData)
@@ -227,42 +244,41 @@
       <div class="puzzle-info">
         <div class="puzzle-stats">
           <div class="stat-item">
-            <span class="stat-label">Date:</span>
+            <span class="stat-label">Date</span>
             <span class="stat-value">{formatDate(selectedDate)}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Status:</span>
+            <span class="stat-label">Status</span>
             <span class="stat-value">
               {selectedPuzzleData.isCompleted ? 'Completed ✓' : 'Not completed'}
             </span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">First Score:</span>
+            <span class="stat-label">First Score</span>
             <span class="stat-value">{selectedPuzzleData.firstScore || 0}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Best Score:</span>
+            <span class="stat-label">Best Score</span>
             <span class="stat-value">{selectedPuzzleData.bestScore || 0}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Attempts:</span>
+            <span class="stat-label">Attempts</span>
             <span class="stat-value">{selectedPuzzleData.attempts || 0}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Total Unique Words:</span>
+            <span class="stat-label">Total Unique Words</span>
             <span class="stat-value">{selectedPuzzleData.allWordsFound?.length || 0}</span>
           </div>
-          {#if selectedCompletionData}
-            <div class="stat-item">
-              <span class="stat-label">Longest Word:</span>
-              <span class="stat-value">
-                {selectedCompletionData.longestWord || 'None'}
-                {#if selectedCompletionData.longestWordLength}
-                  ({selectedCompletionData.longestWordLength} letters)
-                {/if}
-              </span>
-            </div>
-          {/if}
+          <div class="stat-item">
+            <span class="stat-label">Longest Word</span>
+            <span class="stat-value">
+              {#if selectedPuzzleData.longestWord}
+                {selectedPuzzleData.longestWord}
+              {:else}
+                <span class="no-word">No words yet</span>
+              {/if}
+            </span>
+          </div>
         </div>
         
         <button class="replay-button" onclick={replayPuzzle}>
@@ -272,17 +288,14 @@
             <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
             <path d="M3 21v-5h5"></path>
           </svg>
-          {selectedPuzzleData.isCompleted ? 'Replay Puzzle' : 'Play Puzzle'}
+          {selectedPuzzleData.isCompleted ? 'Play Again' : 'Play Puzzle'}
         </button>
       </div>
     {/if}
   {:else}
     <div class="replay-mode">
       <div class="replay-header">
-        <h2>Replaying: {formatDate(selectedDate)}</h2>
-        <button class="stop-replay-button" onclick={stopReplay}>
-          Back to Archive
-        </button>
+        <div class="date">{formatDate(selectedDate)}</div>
       </div>
       
       <!-- Completion Banner -->
@@ -342,14 +355,21 @@
               </div>
             </div>
             <div class="completion-actions">
-              <button onclick={stopReplay} class="reset-button">
+              <button onclick={stopReplay} class="back-button">
+                <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 12H5"></path>
+                  <path d="M12 19l-7-7 7-7"></path>
+                </svg>
+                Back to Archive
+              </button>
+              <button onclick={replayPuzzle} class="reset-button">
                 <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
                   <path d="M21 3v5h-5"></path>
                   <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
                   <path d="M3 21v-5h5"></path>
                 </svg>
-                Back to Archive
+                Play Again
               </button>
             </div>
           </div>
@@ -433,6 +453,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 4px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .stat-item:last-child {
+    border-bottom: none;
   }
 
   .stat-label {
@@ -497,6 +522,48 @@
     justify-content: center;
   }
 
+  .reset-button {
+    padding: 8px 16px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .reset-button:hover {
+    background-color: #0056b3;
+  }
+
+  .back-button {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .back-button:hover {
+    background-color: #f8f9fa;
+  }
+
   .stat-value .no-word {
     color: #999;
     font-style: italic;
@@ -513,32 +580,19 @@
 
   .replay-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     width: 100%;
     max-width: 600px;
   }
 
-  .replay-header h2 {
-    margin: 0;
-    color: #333;
-    font-size: 1.25rem;
+
+  .date {
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
   }
 
-  .stop-replay-button {
-    padding: 8px 16px;
-    background: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .stop-replay-button:hover {
-    background: #545b62;
-  }
 
   .game-container {
     display: flex;
@@ -608,12 +662,8 @@
     padding: 16px;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-    width: 100%;
     background-color: white;
-  }
-
-  .words-found {
-    text-align: left;
+    width: 100%;
   }
 
   .words-title {
@@ -647,61 +697,36 @@
   }
 
 
-  .words-found {
-    text-align: left;
-  }
-
-  .words-title {
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #333;
-  }
-
-  .words-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: center;
-  }
-
-  .word-pill {
-    background: #e9ecef;
-    color: #333;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .penalty-pill {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-  }
 
   .score-stats-panel {
-    background: white;
+    background-color: white;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-    padding: 12px;
+    padding: 8px 16px;
+    width: 100%;
   }
 
   .stat-line {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .stat-line:last-child {
+    border-bottom: none;
   }
 
   .stat-label {
-    font-weight: bold;
-    color: #555;
+    font-size: 0.9em;
+    color: #666;
+    font-weight: 500;
   }
 
   .stat-value {
+    font-size: 1em;
+    font-weight: 600;
     color: #333;
   }
 
@@ -725,7 +750,7 @@
       text-align: center;
     }
 
-    .replay-header h2 {
+    .replay-header .date {
       font-size: 1.1rem;
     }
   }
@@ -748,6 +773,22 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 2px;
+    }
+
+    .score-stats-panel {
+      padding: 12px;
+    }
+
+    .stat-line {
+      padding: 6px 0;
+    }
+
+    .stat-label {
+      font-size: 0.85em;
+    }
+
+    .stat-value {
+      font-size: 0.9em;
     }
   }
 </style>

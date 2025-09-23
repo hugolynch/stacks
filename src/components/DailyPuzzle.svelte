@@ -63,6 +63,13 @@
     }
   })
 
+  // Update all words found in real-time during gameplay
+  $effect(() => {
+    if (game.usedWords.length > 0) {
+      updateAllWordsFound()
+    }
+  })
+
   function initializeDailyPuzzle() {
     // Get today's puzzle data
     dailyData = getDailyPuzzleData()
@@ -151,7 +158,7 @@
   }
 
 
-  // Update best score and longest word when words are submitted
+  // Update best score when words are submitted
   function updateBestScore() {
     // Calculate current penalty based on remaining tiles
     const remainingTiles = game.layers.reduce((acc: any[], layer: any) => acc.concat(layer.tiles), [])
@@ -161,8 +168,8 @@
     const currentFinalScore = game.totalScore - currentPenalty
     dailyData.bestScore = Math.max(dailyData.bestScore, currentFinalScore)
     
-    // Update longest word length
-    updateLongestWordLength()
+    // Note: We don't update longest word here - only at game completion
+    // to ensure we keep the longest word across all attempts
     
     // Save to localStorage without calling updateTodayBestScore to avoid overwriting firstScore
     saveDailyProgress(dailyData)
@@ -213,6 +220,18 @@
     // Update all words found across all attempts
     updateAllWordsFound()
     
+    // Update longest word if current attempt has a longer word
+    if (game.usedWords.length > 0) {
+      const longestWordData = game.usedWords.reduce((longest, current) => 
+        current.word.length > longest.word.length ? current : longest
+      )
+      
+      if (longestWordData.word.length > dailyData.longestWordLength) {
+        dailyData.longestWordLength = longestWordData.word.length
+        dailyData.longestWord = longestWordData.word
+      }
+    }
+    
     // Save the updated data to localStorage
     saveDailyProgress(dailyData)
     
@@ -233,9 +252,8 @@
     
     // Reset completion status to hide banner
     dailyData.isCompleted = false
-    dailyData.longestWordLength = 0
-    dailyData.longestWord = ''
-    dailyData.allWordsFound = []
+    // Note: We don't reset longestWordLength, longestWord, or allWordsFound
+    // as these should persist across replays to maintain cumulative stats
     
     // Reset game state to fresh puzzle
     game.currentWord = ''
@@ -506,7 +524,7 @@ Longest Word: ${dailyData.longestWordLength} letters`
     background-color: white;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-    padding: 16px;
+    padding: 8px 16px;
     width: 100%;
   }
 

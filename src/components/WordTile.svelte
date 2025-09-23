@@ -34,8 +34,8 @@
     justify-content: center;
     width: 40px;
     height: 40px;
-    background-color: #90EE90;
-    border: 2px solid #4CAF50;
+    background-color: #CCE6BF;
+    border: 2px solid #BED4AA;
     border-radius: 4px;
     cursor: grab;
     user-select: none;
@@ -45,7 +45,6 @@
   }
 
   .word-tile:hover {
-    background-color: #7ED321;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }

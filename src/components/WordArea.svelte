@@ -195,9 +195,8 @@
     justify-content: center;
     min-width: 40px;
     height: 40px;
-    background-color: #28a745;
-    color: white;
-    border-radius: 8px;
+    background-color: #ccc;
+    border-radius: 4px;
     font-size: 18px;
     font-weight: 700;
   }

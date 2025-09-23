@@ -402,7 +402,14 @@
       <li>6 letters = 12 points</li>
       <li>7 letters = 17 points</li>
       <li>8 letters = 23 points</li>
-      <li>9+ letters = Even higher scores!</li>
+      <li>9 letters = 30 points</li>
+      <li>10 letters = 38 points</li>
+      <li>11 letters = 47 points</li>
+      <li>12 letters = 57 points</li>
+      <li>13 letters = 68 points</li>
+      <li>14 letters = 80 points</li>
+      <li>15 letters = 93 points</li>
+      <li>16 letters = 107 points</li>
     </ul>
 
     <h3>Special Tiles</h3>
