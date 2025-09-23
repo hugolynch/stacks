@@ -29,7 +29,9 @@
     isCompleted: false,
     firstScore: 0,
     bestScore: 0,
-    attempts: 0
+    attempts: 0,
+    longestWordLength: 0,
+    longestWord: ''
   })
 
   // Share button state
@@ -83,6 +85,8 @@
         game.finalScore = completionData.finalScore || 0
         game.penaltyScore = completionData.penaltyScore || 0
         game.gameOver = completionData.gameOver || true
+        dailyData.longestWordLength = completionData.longestWordLength || 0
+        dailyData.longestWord = completionData.longestWord || ''
         
         // Generate the puzzle layout for display (but don't make it playable)
         const puzzle = generateDailyPuzzle(dailyData.seed)
@@ -146,7 +150,7 @@
   }
 
 
-  // Update best score when words are submitted
+  // Update best score and longest word when words are submitted
   function updateBestScore() {
     // Calculate current penalty based on remaining tiles
     const remainingTiles = game.layers.reduce((acc: any[], layer: any) => acc.concat(layer.tiles), [])
@@ -156,8 +160,25 @@
     const currentFinalScore = game.totalScore - currentPenalty
     dailyData.bestScore = Math.max(dailyData.bestScore, currentFinalScore)
     
+    // Update longest word length
+    updateLongestWordLength()
+    
     // Save to localStorage without calling updateTodayBestScore to avoid overwriting firstScore
     saveDailyProgress(dailyData)
+  }
+
+  // Update longest word length and word based on current used words
+  function updateLongestWordLength() {
+    if (game.usedWords.length > 0) {
+      const longestWordData = game.usedWords.reduce((longest, current) => 
+        current.word.length > longest.word.length ? current : longest
+      )
+      
+      if (longestWordData.word.length > dailyData.longestWordLength) {
+        dailyData.longestWordLength = longestWordData.word.length
+        dailyData.longestWord = longestWordData.word
+      }
+    }
   }
 
   // Handle daily puzzle end game
@@ -193,6 +214,8 @@
     
     // Reset completion status to hide banner
     dailyData.isCompleted = false
+    dailyData.longestWordLength = 0
+    dailyData.longestWord = ''
     
     // Reset game state to fresh puzzle
     game.currentWord = ''
@@ -238,7 +261,8 @@ ${formatDate(dailyData.date)}
     
 First Score: ${dailyData.firstScore}
 Best Score: ${dailyData.bestScore}
-Attempts: ${dailyData.attempts}`
+Attempts: ${dailyData.attempts}
+Longest Word: ${dailyData.longestWordLength} letters`
 
     try {
       await navigator.clipboard.writeText(statsText)
@@ -273,7 +297,13 @@ Attempts: ${dailyData.attempts}`
             <div class="words-title">Words found this attempt</div>
             <div class="words-list">
               {#each game.usedWords as wordData (wordData.word)}
-                <span class="word-pill">{wordData.word} ({wordData.score})</span>
+                <span class="word-pill">
+                  {#if wordData.word === dailyData.longestWord}
+                    {wordData.word} ({wordData.score}) ★
+                  {:else}
+                    {wordData.word} ({wordData.score})
+                  {/if}
+                </span>
               {/each}
               {#if game.penaltyScore > 0}
                 <span class="penalty-pill">
@@ -289,18 +319,28 @@ Attempts: ${dailyData.attempts}`
             {/if}
           </div>
         </div>
-        <div class="score-stats">
-          <div class="score-item">
-            <span class="score-label">First Score</span>
-            <span class="score-value">{dailyData.firstScore}</span>
+        <div class="score-stats-panel">
+          <div class="stat-line">
+            <span class="stat-label">First Score</span>
+            <span class="stat-value">{dailyData.firstScore}</span>
           </div>
-          <div class="score-item">
-            <span class="score-label">Best Score</span>
-            <span class="score-value">{dailyData.bestScore}</span>
+          <div class="stat-line">
+            <span class="stat-label">Best Score</span>
+            <span class="stat-value">{dailyData.bestScore}</span>
           </div>
-          <div class="score-item">
-            <span class="score-label">Attempts</span>
-            <span class="score-value">{dailyData.attempts}</span>
+          <div class="stat-line">
+            <span class="stat-label">Longest Word</span>
+            <span class="stat-value">
+              {#if dailyData.longestWord}
+                {dailyData.longestWord}
+              {:else}
+                <span class="no-word">No words yet</span>
+              {/if}
+            </span>
+          </div>
+          <div class="stat-line">
+            <span class="stat-label">Attempts</span>
+            <span class="stat-value">{dailyData.attempts}</span>
           </div>
         </div>
         <div class="completion-actions">
@@ -442,40 +482,42 @@ Attempts: ${dailyData.attempts}`
     color: #333;
   }
 
-  .score-stats {
-    display: flex;
-    gap: 16px;
-    flex-wrap: nowrap;
-    justify-content: center;
-  }
-
-  .score-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    padding: 12px 16px;
+  .score-stats-panel {
+    background-color: white;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-    background-color: white;
-    min-width: 100px;
-    flex: 1;
+    padding: 16px;
+    width: 100%;
   }
 
-  .score-label {
+  .stat-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .stat-line:last-child {
+    border-bottom: none;
+  }
+
+  .stat-label {
     font-size: 0.9em;
     color: #666;
-    margin-bottom: 3px;
-    white-space: nowrap;
-    text-align: center;
+    font-weight: 500;
   }
 
-  .score-value {
-    font-size: 1.1em;
+  .stat-value {
+    font-size: 1em;
     font-weight: 600;
     color: #333;
-    white-space: nowrap;
-    text-align: center;
+  }
+
+  .stat-value .no-word {
+    color: #999;
+    font-style: italic;
+    font-weight: 400;
   }
 
   .score-breakdown {
@@ -689,5 +731,24 @@ Attempts: ${dailyData.attempts}`
     width: 16px;
     height: 16px;
     flex-shrink: 0;
+  }
+
+  /* Mobile responsive styles */
+  @media (max-width: 480px) {
+    .score-stats-panel {
+      padding: 12px;
+    }
+
+    .stat-line {
+      padding: 6px 0;
+    }
+
+    .stat-label {
+      font-size: 0.85em;
+    }
+
+    .stat-value {
+      font-size: 0.9em;
+    }
   }
 </style>

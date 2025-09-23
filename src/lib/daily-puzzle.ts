@@ -9,6 +9,8 @@ export interface DailyPuzzleData {
   firstScore: number;    // Score from first attempt
   bestScore: number;     // Player's best score
   attempts: number;      // Number of attempts
+  longestWordLength: number; // Length of longest word submitted
+  longestWord: string;   // Actual longest word submitted
 }
 
 // Generate a consistent seed based on date
@@ -48,7 +50,9 @@ export function getDailyPuzzleData(): DailyPuzzleData {
         isCompleted: parsed.isCompleted || false,
         firstScore: parsed.firstScore || 0,
         bestScore: parsed.bestScore || 0,
-        attempts: parsed.attempts || 0
+        attempts: parsed.attempts || 0,
+        longestWordLength: parsed.longestWordLength || 0,
+        longestWord: parsed.longestWord || ''
       }
     } catch (error) {
       console.error('Error parsing saved daily puzzle data:', error)
@@ -62,7 +66,9 @@ export function getDailyPuzzleData(): DailyPuzzleData {
     isCompleted: false,
     firstScore: 0,
     bestScore: 0,
-    attempts: 0
+    attempts: 0,
+    longestWordLength: 0,
+    longestWord: ''
   }
 }
 
@@ -72,7 +78,9 @@ export function saveDailyProgress(data: DailyPuzzleData): void {
     isCompleted: data.isCompleted,
     firstScore: data.firstScore,
     bestScore: data.bestScore,
-    attempts: data.attempts
+    attempts: data.attempts,
+    longestWordLength: data.longestWordLength,
+    longestWord: data.longestWord
   }
   localStorage.setItem(`daily-${data.date}`, JSON.stringify(saveData))
 }
@@ -84,6 +92,8 @@ export function saveDailyCompletionData(data: DailyPuzzleData, gameState: any): 
     firstScore: data.firstScore,
     bestScore: data.bestScore,
     attempts: data.attempts,
+    longestWordLength: data.longestWordLength,
+    longestWord: data.longestWord,
     // Save completion-specific game state for banner display
     usedWords: gameState.usedWords,
     finalScore: gameState.finalScore,
