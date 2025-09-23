@@ -471,6 +471,7 @@
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
+    padding: 0 16px;
   }
 
   .instructions-content {
@@ -480,11 +481,13 @@
     width: 100%;
     line-height: 1.6;
     border: 1px solid #e9ecef;
+    box-sizing: border-box;
   }
 
   .instructions-content h1 {
     color: #333;
     margin-bottom: 20px;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
   }
 
   .instructions-content h2 {
@@ -492,16 +495,19 @@
     margin-top: 24px;
     border-bottom: 1px solid #e9ecef;
     padding-bottom: 8px;
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
   }
 
   .instructions-content h3 {
     color: #495057;
     margin-top: 20px;
     margin-bottom: 8px;
+    font-size: clamp(1.1rem, 2.5vw, 1.25rem);
   }
 
   .instructions-content p {
     color: #555;
+    font-size: clamp(0.9rem, 2vw, 1rem);
   }
 
   .instructions-content ul, .instructions-content ol {
@@ -512,6 +518,7 @@
   .instructions-content li {
     margin-bottom: 6px;
     color: #555;
+    font-size: clamp(0.9rem, 2vw, 1rem);
   }
 
   .instructions-content strong {
@@ -584,12 +591,15 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
   }
 
   .tile-label {
     color: #555;
     line-height: 1.6;
     white-space: nowrap;
+    flex: 1;
+    min-width: 200px;
   }
 
   /* Board Layout Demo */
@@ -598,6 +608,7 @@
     gap: 20px;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .layer-demo {
@@ -878,6 +889,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    min-height: 44px;
+    touch-action: manipulation;
   }
 
   .demo-controls button:hover:not(:disabled) {
@@ -910,11 +923,27 @@
 
   @media (max-width: 768px) {
     .instructions-page {
-      padding: 10px;
+      padding: 0;
+      gap: 12px;
     }
     
     .instructions-content {
-      padding: 16px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 8px;
+    }
+
+    .instructions-content h1 {
+      margin-bottom: 12px;
+    }
+
+    .instructions-content h2 {
+      margin-top: 16px;
+    }
+
+    .instructions-content h3 {
+      margin-top: 12px;
     }
 
     .tile-demo {
@@ -929,6 +958,14 @@
 
     .tile-label {
       font-size: 14px;
+      white-space: normal;
+      min-width: unset;
+    }
+
+    .tile-pair {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
     }
 
     .demo-board {
@@ -967,13 +1004,11 @@
       font-size: 8px;
     }
 
-
     .word-tile {
       width: 30px;
       height: 30px;
       font-size: 12px;
     }
-
 
     .demo-word-area {
       min-width: 250px;
@@ -986,11 +1021,103 @@
 
     .demo-controls {
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .demo-controls button {
-      padding: 6px 12px;
+      padding: 8px 12px;
       font-size: 12px;
+      min-height: 40px;
+    }
+
+    .visual-example {
+      padding: 8px;
+    }
+
+    .demo-feedback {
+      font-size: 13px;
+    }
+
+    .instructions-content ul, .instructions-content ol {
+      margin-bottom: 12px;
+      padding-left: 20px;
+    }
+
+    .instructions-content li {
+      margin-bottom: 4px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .instructions-page {
+      padding: 0;
+    }
+    
+    .instructions-content {
+      padding: 4px;
+    }
+
+    .tile {
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+
+    .tile-label {
+      font-size: 13px;
+    }
+
+    .demo-board {
+      width: 120px;
+      height: 120px;
+    }
+
+    .top-layer {
+      width: 120px;
+      height: 120px;
+    }
+
+    .bottom-layer {
+      width: 60px;
+      height: 60px;
+      top: 30px;
+      left: 30px;
+    }
+
+    .demo-tile {
+      font-size: 16px;
+    }
+
+    .corner {
+      font-size: 8px;
+    }
+
+    .demo-tile-small {
+      width: 18px;
+      height: 18px;
+      font-size: 7px;
+    }
+
+    .word-tile {
+      width: 28px;
+      height: 28px;
+      font-size: 11px;
+    }
+
+    .demo-word-area {
+      min-width: 200px;
+      padding: 12px;
+    }
+
+    .demo-controls button {
+      padding: 6px 10px;
+      font-size: 11px;
+      min-height: 36px;
+    }
+
+    .word-tiles-container {
+      gap: 4px;
+      padding: 6px;
     }
   }
 </style>
