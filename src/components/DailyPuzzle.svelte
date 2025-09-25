@@ -45,6 +45,9 @@
     // Register the Daily Puzzle end game callback
     setDailyPuzzleEndGameCallback(handleDailyEndGame)
     
+    // Set the completion flag for upcoming letters display
+    ;(window as any).dailyPuzzleCompleted = dailyData.isCompleted
+    
     initializeDailyPuzzle()
   })
 
@@ -101,6 +104,7 @@
         game.layers = puzzle.layers
         ;(window as any).dailySwapPool = puzzle.swapPool
         ;(window as any).dailyRng = puzzle.rng
+        ;(window as any).dailyPuzzleSeed = dailyData.seed
         return
       } else {
         // If completion data is missing, reset the completion status
@@ -132,6 +136,7 @@
       const puzzle = generateDailyPuzzle(dailyData.seed)
       ;(window as any).dailySwapPool = puzzle.swapPool
       ;(window as any).dailyRng = puzzle.rng
+      ;(window as any).dailyPuzzleSeed = dailyData.seed
     } else {
       // No saved state, start fresh
       game.currentWord = ''
@@ -154,6 +159,7 @@
       // Set up the swap pool and seeded random for daily puzzle
       ;(window as any).dailySwapPool = puzzle.swapPool
       ;(window as any).dailyRng = puzzle.rng
+      ;(window as any).dailyPuzzleSeed = dailyData.seed
     }
   }
 
@@ -232,6 +238,9 @@
       }
     }
     
+    // Set the completion flag for upcoming letters display
+    ;(window as any).dailyPuzzleCompleted = true
+    
     // Save the updated data to localStorage
     saveDailyProgress(dailyData)
     
@@ -255,6 +264,9 @@
     // Note: We don't reset longestWordLength, longestWord, or allWordsFound
     // as these should persist across replays to maintain cumulative stats
     
+    // Keep the completion flag set to true for upcoming letters display
+    ;(window as any).dailyPuzzleCompleted = true
+    
     // Reset game state to fresh puzzle
     game.currentWord = ''
     game.selectedTiles = []
@@ -276,6 +288,7 @@
     // Set up the swap pool and seeded random
     ;(window as any).dailySwapPool = puzzle.swapPool
     ;(window as any).dailyRng = puzzle.rng
+    ;(window as any).dailyPuzzleSeed = dailyData.seed
   }
 
   // Format date for display

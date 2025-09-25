@@ -1,4 +1,5 @@
 import type { GameState, Tile, Layer, Coordinate } from '../types/game'
+import { SeededRandom } from './daily-puzzle'
 
 
 // Generate tile bag with Scrabble distribution
@@ -604,7 +605,17 @@ export function toggleSwapMode() {
   
   game.swapMode = !game.swapMode
   if (game.swapMode) {
-    setFeedback("Click a tile to swap it for a new one", 'blue')
+    // Show upcoming letters for daily puzzle mode only if it's been completed before
+    if (game.isDailyPuzzle && (window as any).dailyPuzzleCompleted) {
+      const upcomingLetters = getUpcomingSwapLetters(3)
+      if (upcomingLetters.length > 0) {
+        setFeedback(`Click a tile to swap it for a new one. Upcoming letters: ${upcomingLetters.join(', ')}`, 'blue')
+      } else {
+        setFeedback("Click a tile to swap it for a new one", 'blue')
+      }
+    } else {
+      setFeedback("Click a tile to swap it for a new one", 'blue')
+    }
   } else {
     setFeedback("Swap mode cancelled", 'black')
   }
@@ -645,8 +656,17 @@ export function swapTile(tile: Tile) {
   // Exit swap mode
   game.swapMode = false
   
-  // Update feedback
-  setFeedback(`Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${currentSwapPool.length} tiles left)`, 'green')
+  // Update feedback with upcoming letters for daily puzzle mode only if it's been completed before
+  if (game.isDailyPuzzle && game.swapsRemaining > 0 && (window as any).dailyPuzzleCompleted) {
+    const upcomingLetters = getUpcomingSwapLetters(3)
+    if (upcomingLetters.length > 0) {
+      setFeedback(`Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining. Upcoming letters: ${upcomingLetters.join(', ')}`, 'green')
+    } else {
+      setFeedback(`Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${currentSwapPool.length} tiles left)`, 'green')
+    }
+  } else {
+    setFeedback(`Swapped to ${newLetter}! ${game.swapsRemaining} swaps remaining (${currentSwapPool.length} tiles left)`, 'green')
+  }
   
   // No need to trigger full re-render since we only changed one tile's letter
   // The tile component will automatically update due to the letter change
@@ -709,5 +729,73 @@ export function getSwapPoolStatus() {
     remainingTiles: swapPool.length,
     tiles: swapPool.slice(0, 10), // Show first 10 tiles
     totalOriginal: originalTileBag.length
+  }
+}
+
+// Get upcoming swap letters for daily puzzle
+export function getUpcomingSwapLetters(count: number = 3): string[] {
+  // Use daily swap pool if available (for daily puzzle mode)
+  const currentSwapPool = (window as any).dailySwapPool || swapPool
+  const dailyRng = (window as any).dailyRng // Seeded random for daily puzzle
+  
+  if (!currentSwapPool || currentSwapPool.length === 0) {
+    return []
+  }
+  
+  // For daily puzzle mode with seeded random, we need to simulate the RNG state
+  if (dailyRng && game.isDailyPuzzle) {
+    // Create a copy of the swap pool to avoid modifying the original
+    const poolCopy = [...currentSwapPool]
+    const upcomingLetters: string[] = []
+    
+    // We need to track how many swaps have been made to predict the next ones
+    const totalSwapsMade = 3 - game.swapsRemaining // How many swaps have been used
+    const originalSeed = (window as any).dailyPuzzleSeed
+    
+    if (originalSeed !== undefined) {
+      // Create a new SeededRandom instance with the original seed
+      const tempRng = new SeededRandom(originalSeed)
+      
+      // Calculate how many RNG calls were made during puzzle generation:
+      // 1. Shuffle: TILE_BAG.length - 1 calls (99 calls)
+      // 2. Tile placement: 16 + 9 + 4 = 29 tiles, each with 1 RNG call = 29 calls
+      // Total: 99 + 29 = 128 calls during puzzle generation
+      const puzzleGenerationCalls = 99 + 29 // shuffle calls + tile placement calls
+      
+      // Advance the RNG to the current state:
+      // 1. All puzzle generation calls
+      // 2. All previous swap calls
+      for (let i = 0; i < puzzleGenerationCalls + totalSwapsMade; i++) {
+        tempRng.next()
+      }
+      
+      // Now get the next few letters that would come up
+      for (let i = 0; i < Math.min(count, poolCopy.length); i++) {
+        const randomIndex = Math.floor(tempRng.next() * poolCopy.length)
+        upcomingLetters.push(poolCopy[randomIndex])
+        poolCopy.splice(randomIndex, 1)
+      }
+    } else {
+      // Fallback: just return random letters from the pool
+      for (let i = 0; i < Math.min(count, poolCopy.length); i++) {
+        const randomIndex = Math.floor(Math.random() * poolCopy.length)
+        upcomingLetters.push(poolCopy[randomIndex])
+        poolCopy.splice(randomIndex, 1)
+      }
+    }
+    
+    return upcomingLetters
+  } else {
+    // For free play mode, just return random letters from the pool
+    const poolCopy = [...currentSwapPool]
+    const upcomingLetters: string[] = []
+    
+    for (let i = 0; i < Math.min(count, poolCopy.length); i++) {
+      const randomIndex = Math.floor(Math.random() * poolCopy.length)
+      upcomingLetters.push(poolCopy[randomIndex])
+      poolCopy.splice(randomIndex, 1)
+    }
+    
+    return upcomingLetters
   }
 }
