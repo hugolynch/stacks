@@ -410,6 +410,7 @@
       <li>14 letters = 80 points</li>
       <li>15 letters = 93 points</li>
       <li>16 letters = 107 points</li>
+      <li>17+ = Even more points!</li>
     </ul>
 
     <h3>Special Tiles</h3>

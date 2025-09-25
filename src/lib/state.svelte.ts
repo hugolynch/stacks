@@ -531,7 +531,15 @@ function calculateWordScore(word: string): number {
     13: 68,
     14: 80,
     15: 93,
-    16: 107
+    16: 107,
+    17: 122,
+    18: 138,
+    19: 155,
+    20: 173,
+    21: 192,
+    22: 212,
+    23: 233,
+    24: 255
   }
   
   return scores[length] || 0
