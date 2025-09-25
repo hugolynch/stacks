@@ -55,9 +55,7 @@
     </div>
     
     {#if game.currentWord.length > 0}
-      <div class="potential-score">
-        {getCurrentWordScore()}
-      </div>
+      <div class="potential-score">+{getCurrentWordScore()}</div>
     {/if}
   </div>
   
@@ -115,7 +113,7 @@
   .word-area-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
   }
 
   .word-tiles-container {
@@ -124,7 +122,7 @@
     flex-wrap: wrap;
     justify-content: center;
     min-height: 50px;
-    padding: 10px;
+    padding: 8px;
     background-color: #f0f0f0;
     border-radius: 8px;
     border: 2px dashed #ccc;
@@ -195,10 +193,10 @@
     justify-content: center;
     min-width: 40px;
     height: 40px;
-    background-color: #ccc;
     border-radius: 4px;
     font-size: 18px;
     font-weight: 700;
+    color: #579E47;
   }
 
   .button-icon {

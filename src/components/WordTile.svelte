@@ -34,8 +34,8 @@
     justify-content: center;
     width: 40px;
     height: 40px;
-    background-color: #CCE6BF;
-    border: 2px solid #BED4AA;
+    background-color: #EDF5EB;
+    border: 2px solid #ACD6A3;
     border-radius: 4px;
     cursor: grab;
     user-select: none;
