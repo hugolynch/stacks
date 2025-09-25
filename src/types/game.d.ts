@@ -34,6 +34,7 @@ export type GameState = {
   penaltyScore: number
   showEndGameConfirmation: boolean
   isDailyPuzzle: boolean
+  gameMode: 'main' | 'mini' | 'pyramid'
 }
 
 export type TileState = 'available' | 'selected' | 'visible-unselectable' | 'temp-selectable' | 'hidden'

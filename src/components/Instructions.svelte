@@ -430,6 +430,7 @@
     <ul>
       <li>Random puzzle. Refresh the page anytime to start a new puzzle</li>
       <li>Perfect for practice! Play at your own pace without time limits</li>
+      <li>Three different board sizes: Standard (4x4 → 3x3 → 2x2), Mini (3x3 → 2x2 → 3x3), and Pyramid (2x2 → 3x3 → 4x4)</li>
     </ul>
 
     <h3>Daily Puzzle</h3>

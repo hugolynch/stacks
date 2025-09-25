@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { game, initializeGame, confirmEndGame, setDailyPuzzleMode } from './lib/state.svelte'
+  import { game, initializeGame, confirmEndGame, setDailyPuzzleMode, setGameMode } from './lib/state.svelte'
   import Board from './components/Board.svelte'
+  import MiniBoard from './components/MiniBoard.svelte'
+  import PyramidBoard from './components/PyramidBoard.svelte'
+  import FreePlayDropdown from './components/FreePlayDropdown.svelte'
   import WordArea from './components/WordArea.svelte'
   import Score from './components/Score.svelte'
   import DailyPuzzle from './components/DailyPuzzle.svelte'
@@ -10,20 +13,29 @@
   const logo = './logo.svg'
 
   // Navigation state
-  let currentPage = $state<'main' | 'daily' | 'instructions' | 'archive'>('main')
+  let currentPage = $state<'main' | 'mini' | 'pyramid' | 'daily' | 'instructions' | 'archive'>('main')
 
   onMount(() => {
     // Restore page state from localStorage
     const savedPage = localStorage.getItem('stacks-current-page')
-    if (savedPage && ['main', 'daily', 'instructions', 'archive'].includes(savedPage)) {
-      currentPage = savedPage as 'main' | 'daily' | 'instructions' | 'archive'
+    if (savedPage && ['main', 'mini', 'pyramid', 'daily', 'instructions', 'archive'].includes(savedPage)) {
+      currentPage = savedPage as 'main' | 'mini' | 'pyramid' | 'daily' | 'instructions' | 'archive'
     }
 
     // Set to regular game mode (not Daily Puzzle) unless on daily page
     setDailyPuzzleMode(currentPage === 'daily')
     
-    // Only initialize game if on main page
-    if (currentPage === 'main') {
+    // Set game mode based on current page
+    if (currentPage === 'mini') {
+      setGameMode('mini')
+    } else if (currentPage === 'pyramid') {
+      setGameMode('pyramid')
+    } else if (currentPage === 'main') {
+      setGameMode('main')
+    }
+    
+    // Only initialize game if on main, mini, or pyramid page
+    if (currentPage === 'main' || currentPage === 'mini' || currentPage === 'pyramid') {
       initializeGame()
     }
   })
@@ -33,7 +45,39 @@
     localStorage.setItem('stacks-current-page', 'main')
     // Set to regular game mode (not Daily Puzzle)
     setDailyPuzzleMode(false)
+    setGameMode('main')
     // Reset game state and generate new puzzle for free play
+    initializeGame()
+  }
+
+  function goToMini() {
+    currentPage = 'mini'
+    localStorage.setItem('stacks-current-page', 'mini')
+    // Set to regular game mode (not Daily Puzzle)
+    setDailyPuzzleMode(false)
+    setGameMode('mini')
+    // Reset game state and generate new puzzle for mini mode
+    initializeGame()
+  }
+
+  function goToPyramid() {
+    currentPage = 'pyramid'
+    localStorage.setItem('stacks-current-page', 'pyramid')
+    // Set to regular game mode (not Daily Puzzle)
+    setDailyPuzzleMode(false)
+    setGameMode('pyramid')
+    // Reset game state and generate new puzzle for pyramid mode
+    initializeGame()
+  }
+
+  function handleFreePlayModeSelect(event: CustomEvent<'main' | 'mini' | 'pyramid'>) {
+    const mode = event.detail
+    currentPage = mode
+    localStorage.setItem('stacks-current-page', mode)
+    // Set to regular game mode (not Daily Puzzle)
+    setDailyPuzzleMode(false)
+    setGameMode(mode)
+    // Reset game state and generate new puzzle for selected mode
     initializeGame()
   }
 
@@ -58,13 +102,11 @@
   
   <!-- Navigation -->
   <nav class="page-nav">
-    <button 
-      class="nav-button" 
-      class:active={currentPage === 'main'}
-      onclick={goToMainGame}
-    >
-      Free Play
-    </button>
+    <FreePlayDropdown 
+      currentMode={currentPage === 'main' ? 'main' : currentPage === 'mini' ? 'mini' : currentPage === 'pyramid' ? 'pyramid' : 'main'}
+      isActive={currentPage === 'main' || currentPage === 'mini' || currentPage === 'pyramid'}
+      on:modeSelect={handleFreePlayModeSelect}
+    />
     <button 
       class="nav-button" 
       class:active={currentPage === 'daily'}
@@ -124,6 +166,78 @@
     </div>
   {/if}
 
+  <!-- Mini Game Page -->
+  {#if currentPage === 'mini'}
+    <div class="game-page">
+      <MiniBoard />
+      <WordArea />
+      <Score />
+      
+      <div class="bottom-controls">
+        {#if game.gameOver}
+          <button 
+            onclick={goToMini} 
+            class="new-game-button"
+          >
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+              <path d="M21 3v5h-5"></path>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+              <path d="M3 21v-5h5"></path>
+            </svg>
+            New Game
+          </button>
+        {:else}
+          <button 
+            onclick={confirmEndGame} 
+            class="done-button"
+          >
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+            End Game
+          </button>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
+  <!-- Pyramid Game Page -->
+  {#if currentPage === 'pyramid'}
+    <div class="game-page">
+      <PyramidBoard />
+      <WordArea />
+      <Score />
+      
+      <div class="bottom-controls">
+        {#if game.gameOver}
+          <button 
+            onclick={goToPyramid} 
+            class="new-game-button"
+          >
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+              <path d="M21 3v5h-5"></path>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+              <path d="M3 21v-5h5"></path>
+            </svg>
+            New Game
+          </button>
+        {:else}
+          <button 
+            onclick={confirmEndGame} 
+            class="done-button"
+          >
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+            End Game
+          </button>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
   <!-- Daily Puzzle Page -->
   {#if currentPage === 'daily'}
     <DailyPuzzle />
@@ -143,7 +257,7 @@
 
 <style>
   main {
-    font-family: monospace;
+    font-family: 'JetBrains Mono', monospace;
     display: flex;
     flex-direction: column;
     align-items: center;

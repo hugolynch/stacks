@@ -19,7 +19,8 @@ export const game = $state<GameState>({
   finalScore: 0,
   penaltyScore: 0,
   showEndGameConfirmation: false,
-  isDailyPuzzle: false
+  isDailyPuzzle: false,
+  gameMode: 'main'
 })
 
 // Store the original tile bag and swap pool
@@ -62,6 +63,11 @@ function countRemainingTiles(): number {
 // Set Daily Puzzle mode
 export function setDailyPuzzleMode(isDaily: boolean) {
   game.isDailyPuzzle = isDaily
+}
+
+// Set game mode
+export function setGameMode(mode: 'main' | 'mini' | 'pyramid') {
+  game.gameMode = mode
 }
 
 // Callback for Daily Puzzle end game
@@ -109,11 +115,23 @@ export function initializeGame() {
 }
 
 function generateLayers(): Layer[] {
-  const layers: Layer[] = [
-    { size: 4, offset: 0, tiles: [] },
-    { size: 3, offset: 1, tiles: [] },
-    { size: 2, offset: 2, tiles: [] }
-  ]
+  const layers: Layer[] = game.gameMode === 'mini' 
+    ? [
+        { size: 3, offset: 0, tiles: [] },  // Top: 3x3
+        { size: 2, offset: 1, tiles: [] },  // Middle: 2x2 (centered)
+        { size: 3, offset: 0, tiles: [] }   // Bottom: 3x3
+      ]
+    : game.gameMode === 'pyramid'
+    ? [
+        { size: 2, offset: 2, tiles: [] },  // Top: 2x2 (centered)
+        { size: 3, offset: 1, tiles: [] },  // Middle: 3x3 (centered)
+        { size: 4, offset: 0, tiles: [] }   // Bottom: 4x4
+      ]
+    : [
+        { size: 4, offset: 0, tiles: [] },
+        { size: 3, offset: 1, tiles: [] },
+        { size: 2, offset: 2, tiles: [] }
+      ]
 
   const tileMap = new Map<string, string>()
   const remainingTiles = [...TILE_BAG]
@@ -153,7 +171,7 @@ function generateLayers(): Layer[] {
             [x + 1, y + 1, z - 1]
           ] : undefined,
           selected: false,
-          visible: z === 0, // Only top layer is initially visible
+          visible: z === 0 || (game.gameMode === 'pyramid' && z > 0), // Top layer always visible, or all layers visible in pyramid mode
           selectable: z === 0, // Only top layer is initially selectable
           layer: z,
           position: { x, y }

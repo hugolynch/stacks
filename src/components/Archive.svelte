@@ -461,7 +461,6 @@
   }
 
   .stat-label {
-    font-weight: bold;
     color: #555;
   }
 
@@ -721,11 +720,10 @@
   .stat-label {
     font-size: 0.9em;
     color: #666;
-    font-weight: 500;
   }
 
   .stat-value {
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
     color: #333;
   }
@@ -788,7 +786,7 @@
     }
 
     .stat-value {
-      font-size: 0.9em;
+      font-size: 0.85em;
     }
   }
 </style>

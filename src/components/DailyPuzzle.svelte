@@ -466,7 +466,7 @@ Longest Word: ${dailyData.longestWordLength} letters`
 
 <style>
   .daily-puzzle {
-    font-family: monospace;
+    font-family: 'JetBrains Mono', monospace;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -543,11 +543,11 @@ Longest Word: ${dailyData.longestWordLength} letters`
   .stat-label {
     font-size: 0.9em;
     color: #666;
-    font-weight: 500;
+    font-weight: 400;
   }
 
   .stat-value {
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
     color: #333;
   }
@@ -786,7 +786,7 @@ Longest Word: ${dailyData.longestWordLength} letters`
     }
 
     .stat-value {
-      font-size: 0.9em;
+      font-size: 0.85em;
     }
   }
 </style>
