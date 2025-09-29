@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { game, initializeGame, confirmEndGame, setDailyPuzzleMode, setGameMode } from './lib/state.svelte'
+  import { initializeFullscreen, onFullscreenChange, getFullscreenState, enterFullscreenIfPWA } from './lib/fullscreen'
   import Board from './components/Board.svelte'
   import MiniBoard from './components/MiniBoard.svelte'
   import PyramidBoard from './components/PyramidBoard.svelte'
@@ -10,11 +11,31 @@
   import DailyPuzzle from './components/DailyPuzzle.svelte'
   import Instructions from './components/Instructions.svelte'
   import Archive from './components/Archive.svelte'
+  import InstallPrompt from './components/InstallPrompt.svelte'
   const logo = './logo.svg'
 
   // Navigation state
   let currentPage = $state<'main' | 'mini' | 'pyramid' | 'daily' | 'instructions' | 'archive'>('main')
+  
+  // Fullscreen state
+  let fullscreenState = $state(getFullscreenState())
 
+  onMount(() => {
+    // Initialize fullscreen support
+    initializeFullscreen()
+    
+    // Subscribe to fullscreen changes
+    const unsubscribe = onFullscreenChange((state) => {
+      fullscreenState = state
+    })
+    
+    // Auto-enter fullscreen if running as installed PWA
+    enterFullscreenIfPWA()
+    
+    // Cleanup on unmount
+    return unsubscribe
+  })
+  
   onMount(() => {
     // Restore page state from localStorage
     const savedPage = localStorage.getItem('stacks-current-page')
@@ -95,6 +116,7 @@
     currentPage = 'archive'
     localStorage.setItem('stacks-current-page', 'archive')
   }
+
 </script>
 
 <main>
@@ -253,6 +275,9 @@
     <Archive />
   {/if}
 
+  <!-- Install Prompt -->
+  <InstallPrompt />
+
 </main>
 
 <style>
@@ -405,5 +430,6 @@
     height: 16px;
     flex-shrink: 0;
   }
+
 
 </style>
