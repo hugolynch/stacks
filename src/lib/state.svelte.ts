@@ -175,7 +175,8 @@ function generateLayers(): Layer[] {
           visible: z === 0 || (game.gameMode === 'pyramid' && z > 0), // Top layer always visible, or all layers visible in pyramid mode
           selectable: z === 0, // Only top layer is initially selectable
           layer: z,
-          position: { x, y }
+          position: { x, y },
+          completelyCovered: z > 0 && !(z === 0 || (game.gameMode === 'pyramid' && z > 0)) // Completely covered if not visible
         }
 
         layer.tiles.push(tile)
@@ -278,6 +279,7 @@ export function updateTileStates() {
           )
         })
         tile.visible = hasVisibleParent
+        tile.completelyCovered = !hasVisibleParent
       }
 
       // Update selectability
@@ -715,11 +717,11 @@ export function confirmEndGame() {
 }
 
 // Get tile state for styling
-export function getTileState(tile: Tile): 'available' | 'selected' | 'visible-unselectable' | 'temp-selectable' | 'hidden' {
-  if (!tile.visible) return 'hidden'
+export function getTileState(tile: Tile): 'available' | 'selected' | 'unavailable' | 'temp-selectable' | 'hidden' {
+  if (tile.completelyCovered) return 'hidden'
   if (tile.selected) return 'selected'
   if (isTileTempSelectable(tile)) return 'temp-selectable'
-  if (!tile.selectable) return 'visible-unselectable'
+  if (!tile.selectable) return 'unavailable'
   return 'available'
 }
 

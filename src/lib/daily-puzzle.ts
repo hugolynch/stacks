@@ -346,7 +346,8 @@ export function generateDailyPuzzle(seed: number): { layers: Layer[]; swapPool: 
           visible: z === 0,
           selectable: z === 0,
           layer: z,
-          position: { x, y }
+          position: { x, y },
+          completelyCovered: z > 0 // Middle and bottom layers start completely covered
         }
 
         layer.tiles.push(tile)

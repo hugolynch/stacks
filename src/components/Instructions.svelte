@@ -298,7 +298,7 @@
           <div class="demo-layer bottom-layer">
             <div 
               class="demo-tile" 
-              class:visible-unselectable={!isATempSelectable()}
+              class:unavailable={!isATempSelectable()}
               class:temp-selectable={isATempSelectable()}
               class:selected={tempDemoSelectedTiles.includes('A')}
               onclick={() => toggleDemoTile('A')}
@@ -718,7 +718,7 @@
     background-color: #EBD7BD;
   }
 
-  .demo-tile.visible-unselectable {
+  .demo-tile.unavailable {
     background-color: #F0C6AF;
     border-bottom: 4px solid #E3B49A;
     cursor: not-allowed;

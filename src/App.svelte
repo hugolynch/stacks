@@ -12,7 +12,7 @@
   import Instructions from './components/Instructions.svelte'
   import Archive from './components/Archive.svelte'
   import InstallPrompt from './components/InstallPrompt.svelte'
-  const logo = './logo.svg'
+  const logo = './logo-new.svg'
 
   // Navigation state
   let currentPage = $state<'main' | 'mini' | 'pyramid' | 'daily' | 'instructions' | 'archive'>('main')

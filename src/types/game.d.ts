@@ -10,6 +10,7 @@ export type Tile = {
   selectable: boolean
   layer: number
   position: { x: number; y: number }
+  completelyCovered: boolean
 }
 
 export type Layer = {
@@ -37,4 +38,4 @@ export type GameState = {
   gameMode: 'main' | 'mini' | 'pyramid'
 }
 
-export type TileState = 'available' | 'selected' | 'visible-unselectable' | 'temp-selectable' | 'hidden'
+export type TileState = 'available' | 'selected' | 'unavailable' | 'temp-selectable' | 'hidden'

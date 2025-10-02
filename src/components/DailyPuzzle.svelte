@@ -102,6 +102,16 @@
         // Generate the puzzle layout for display (but don't make it playable)
         const puzzle = generateDailyPuzzle(dailyData.seed)
         game.layers = puzzle.layers
+        
+        // Ensure all tiles have the completelyCovered property
+        game.layers.forEach(layer => {
+          layer.tiles.forEach(tile => {
+            if (tile.completelyCovered === undefined) {
+              tile.completelyCovered = !tile.visible
+            }
+          })
+        })
+        
         ;(window as any).dailySwapPool = puzzle.swapPool
         ;(window as any).dailyRng = puzzle.rng
         ;(window as any).dailyPuzzleSeed = dailyData.seed
@@ -123,6 +133,16 @@
       game.usedWords = savedState.usedWords
       game.totalScore = savedState.totalScore
       game.layers = savedState.layers
+      
+      // Ensure all tiles have the completelyCovered property
+      game.layers.forEach(layer => {
+        layer.tiles.forEach(tile => {
+          if (tile.completelyCovered === undefined) {
+            tile.completelyCovered = !tile.visible
+          }
+        })
+      })
+      
       game.feedback = savedState.feedback
       game.feedbackColor = savedState.feedbackColor
       game.swapsRemaining = savedState.swapsRemaining
