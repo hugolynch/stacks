@@ -1,6 +1,6 @@
 {
-  "name": "Stacks - Word Game",
-  "short_name": "Stacks",
+  "name": "Quarry - Word Game",
+  "short_name": "Quarry",
   "description": "A word puzzle game where you stack letters to form words",
   "start_url": "/",
   "display": "fullscreen",

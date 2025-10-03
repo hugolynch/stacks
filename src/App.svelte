@@ -12,7 +12,7 @@
   import Instructions from './components/Instructions.svelte'
   import Archive from './components/Archive.svelte'
   import InstallPrompt from './components/InstallPrompt.svelte'
-  const logo = './logo-new.svg'
+  const logo = './logo.svg'
 
   // Navigation state
   let currentPage = $state<'main' | 'mini' | 'pyramid' | 'daily' | 'instructions' | 'archive'>('main')
@@ -38,7 +38,7 @@
   
   onMount(() => {
     // Restore page state from localStorage
-    const savedPage = localStorage.getItem('stacks-current-page')
+    const savedPage = localStorage.getItem('quarry-current-page')
     if (savedPage && ['main', 'mini', 'pyramid', 'daily', 'instructions', 'archive'].includes(savedPage)) {
       currentPage = savedPage as 'main' | 'mini' | 'pyramid' | 'daily' | 'instructions' | 'archive'
     }
@@ -63,7 +63,7 @@
 
   function goToMainGame() {
     currentPage = 'main'
-    localStorage.setItem('stacks-current-page', 'main')
+    localStorage.setItem('quarry-current-page', 'main')
     // Set to regular game mode (not Daily Puzzle)
     setDailyPuzzleMode(false)
     setGameMode('main')
@@ -73,7 +73,7 @@
 
   function goToMini() {
     currentPage = 'mini'
-    localStorage.setItem('stacks-current-page', 'mini')
+    localStorage.setItem('quarry-current-page', 'mini')
     // Set to regular game mode (not Daily Puzzle)
     setDailyPuzzleMode(false)
     setGameMode('mini')
@@ -83,7 +83,7 @@
 
   function goToPyramid() {
     currentPage = 'pyramid'
-    localStorage.setItem('stacks-current-page', 'pyramid')
+    localStorage.setItem('quarry-current-page', 'pyramid')
     // Set to regular game mode (not Daily Puzzle)
     setDailyPuzzleMode(false)
     setGameMode('pyramid')
@@ -94,7 +94,7 @@
   function handleFreePlayModeSelect(event: CustomEvent<'main' | 'mini' | 'pyramid'>) {
     const mode = event.detail
     currentPage = mode
-    localStorage.setItem('stacks-current-page', mode)
+    localStorage.setItem('quarry-current-page', mode)
     // Set to regular game mode (not Daily Puzzle)
     setDailyPuzzleMode(false)
     setGameMode(mode)
@@ -104,23 +104,23 @@
 
   function goToDailyPuzzle() {
     currentPage = 'daily'
-    localStorage.setItem('stacks-current-page', 'daily')
+    localStorage.setItem('quarry-current-page', 'daily')
   }
 
   function goToInstructions() {
     currentPage = 'instructions'
-    localStorage.setItem('stacks-current-page', 'instructions')
+    localStorage.setItem('quarry-current-page', 'instructions')
   }
 
   function goToArchive() {
     currentPage = 'archive'
-    localStorage.setItem('stacks-current-page', 'archive')
+    localStorage.setItem('quarry-current-page', 'archive')
   }
 
 </script>
 
 <main>
-  <img src={logo} alt="Stacks Logo" />
+  <img src={logo} alt="Quarry Logo" />
   
   <!-- Navigation -->
   <nav class="page-nav">

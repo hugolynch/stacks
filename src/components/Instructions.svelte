@@ -117,9 +117,9 @@
 
 <div class="instructions-page">
   <div class="instructions-content">
-    <h1>Welcome to Stacks!</h1>
+    <h1>Welcome to Quarry!</h1>
     
-    <p>Stacks is a 3D word-building puzzle game where you dig through layers (or stacks!) of letter tiles to create words and score points.</p>
+    <p>Quarry is a 3D word-building puzzle game where you dig through layers of letter tiles to create words and score points.</p>
 
     <h2>How to Play</h2>
 

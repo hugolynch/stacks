@@ -1,5 +1,5 @@
-// Service Worker for Stacks PWA
-const CACHE_NAME = 'stacks-v1';
+// Service Worker for Quarry PWA
+const CACHE_NAME = 'quarry-v1';
 const urlsToCache = [
   '/',
   '/manifest.json',

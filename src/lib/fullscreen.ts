@@ -1,5 +1,5 @@
 /**
- * Fullscreen API utilities for the Stacks game
+ * Fullscreen API utilities for the Quarry game
  */
 
 export interface FullscreenState {

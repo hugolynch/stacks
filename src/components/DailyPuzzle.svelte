@@ -327,7 +327,7 @@
   // Share daily puzzle stats
   async function shareStats() {
     const statsText =
-`Stacks Daily Puzzle
+`Quarry Daily Puzzle
 ${formatDate(dailyData.date)}
     
 First Score: ${dailyData.firstScore}

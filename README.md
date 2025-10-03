@@ -1,7 +1,7 @@
 
-# Welcome to Stacks!
+# Welcome to Quarry!
 
-Stacks is a 3D word-building puzzle game where you dig through layers (or stacks!) of letter tiles to create words and score points.
+Quarry is a 3D word-building puzzle game where you dig through layers of letter tiles to create words and score points.
 
 ## How to Play
 

@@ -64,7 +64,7 @@
         </svg>
       </div>
       <div class="install-text">
-        <h3>Install Stacks</h3>
+        <h3>Install Quarry</h3>
         <p>Install this app on your device for a better experience!</p>
       </div>
       <div class="install-actions">
