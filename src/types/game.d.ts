@@ -11,6 +11,7 @@ export type Tile = {
   layer: number
   position: { x: number; y: number }
   completelyCovered: boolean
+  pointValue: number
 }
 
 export type Layer = {
