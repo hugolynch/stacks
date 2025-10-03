@@ -114,6 +114,8 @@
         attempts: 0,
         longestWordLength: 0,
         longestWord: '',
+        bestWord: '',
+        bestWordScore: 0,
         allWordsFound: []
       }
       selectedCompletionData = null
@@ -185,6 +187,18 @@
         if (longestWordData.word.length > selectedPuzzleData.longestWordLength) {
           selectedPuzzleData.longestWordLength = longestWordData.word.length
           selectedPuzzleData.longestWord = longestWordData.word
+        }
+      }
+      
+      // Update best word if current attempt has a higher scoring word
+      if (game.usedWords.length > 0) {
+        const bestWordData = game.usedWords.reduce((best, current) => 
+          current.score > best.score ? current : best
+        )
+        
+        if (bestWordData.score > selectedPuzzleData.bestWordScore) {
+          selectedPuzzleData.bestWord = bestWordData.word
+          selectedPuzzleData.bestWordScore = bestWordData.score
         }
       }
       
@@ -262,14 +276,6 @@
             <span class="stat-value">{selectedPuzzleData.bestScore || 0}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Attempts</span>
-            <span class="stat-value">{selectedPuzzleData.attempts || 0}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Total Unique Words</span>
-            <span class="stat-value">{selectedPuzzleData.allWordsFound?.length || 0}</span>
-          </div>
-          <div class="stat-item">
             <span class="stat-label">Longest Word</span>
             <span class="stat-value">
               {#if selectedPuzzleData.longestWord}
@@ -278,6 +284,24 @@
                 <span class="no-word">No words yet</span>
               {/if}
             </span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Best Word</span>
+            <span class="stat-value">
+              {#if selectedPuzzleData.bestWord}
+                {selectedPuzzleData.bestWord} ({selectedPuzzleData.bestWordScore})
+              {:else}
+                <span class="no-word">No words yet</span>
+              {/if}
+            </span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Attempts</span>
+            <span class="stat-value">{selectedPuzzleData.attempts || 0}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Unique Words</span>
+            <span class="stat-value">{selectedPuzzleData.allWordsFound?.length || 0}</span>
           </div>
         </div>
         
@@ -344,6 +368,16 @@
                 <span class="stat-value">
                   {#if selectedPuzzleData.longestWord}
                     {selectedPuzzleData.longestWord}
+                  {:else}
+                    <span class="no-word">No words yet</span>
+                  {/if}
+                </span>
+              </div>
+              <div class="stat-line">
+                <span class="stat-label">Best Word</span>
+                <span class="stat-value">
+                  {#if selectedPuzzleData.bestWord}
+                    {selectedPuzzleData.bestWord} ({selectedPuzzleData.bestWordScore})
                   {:else}
                     <span class="no-word">No words yet</span>
                   {/if}
