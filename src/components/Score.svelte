@@ -4,12 +4,14 @@
 
 <div class="score-container">
   <h3>Score: {game.totalScore}</h3>
-  
+    
   {#if game.usedWords.length > 0}
     <div class="word-list">
       <ul>
         {#each game.usedWords as wordData (wordData.word)}
-          <li>{wordData.word} ({wordData.score})</li>
+          <li class:best-word-item={wordData.word === game.bestWord && wordData.score === game.bestWordScore}>
+            {wordData.word} ({wordData.score})
+          </li>
         {/each}
       </ul>
     </div>
@@ -29,7 +31,6 @@
     font-size: 1.5em;
     color: #333;
   }
-
 
   .word-list {
     text-align: center;
@@ -52,4 +53,5 @@
     border-radius: 4px;
     font-size: 0.9em;
   }
+
 </style>

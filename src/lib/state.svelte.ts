@@ -28,7 +28,9 @@ export const game = $state<GameState>({
   penaltyScore: 0,
   showEndGameConfirmation: false,
   isDailyPuzzle: false,
-  gameMode: 'main'
+  gameMode: 'main',
+  bestWord: '',
+  bestWordScore: 0
 })
 
 // Store the original tile bag and swap pool
@@ -108,6 +110,8 @@ export function initializeGame() {
   game.penaltyScore = 0
   game.showEndGameConfirmation = false
   game.isDailyPuzzle = false
+  game.bestWord = ''
+  game.bestWordScore = 0
 
   // Load word list
   fetch('./wordlist.txt')
@@ -425,6 +429,13 @@ export function submitWord() {
     const wordScore = calculateWordScore(currentWord.toUpperCase())
     game.totalScore += wordScore
     game.usedWords.push({ word: currentWord.toUpperCase(), score: wordScore })
+    
+    // Track best word
+    if (wordScore > game.bestWordScore) {
+      game.bestWord = currentWord.toUpperCase()
+      game.bestWordScore = wordScore
+    }
+    
     setFeedback(`"${currentWord}" is a valid word!`, 'green')
 
     // Remove selected tiles
